@@ -1,5 +1,6 @@
 import pandas as pd
-from tqdm import tqdm
+import tqdm
+import tqdm.asyncio
 import asyncio
 from google.cloud import aiplatform
 from vertexai.preview.generative_models import GenerativeModel, Part, HarmCategory, HarmBlockThreshold
@@ -34,7 +35,6 @@ async def predict_gemini_model(
         "max_output_tokens": max_output_tokens,
     }
     
-    # Define safety settings to block only high signals for all categories
     safety_settings = {
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
         HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
@@ -57,7 +57,7 @@ async def predict_gemini_model(
 
 async def run_multiple_predictions(prompts, model_name="gemini-1.5-flash-001"):
     tasks = []
-    for prompt in prompts:
+    for prompt in tqdm.tqdm(prompts, total=len(prompts)):
         task = predict_gemini_model(
             model_name=model_name,
             temperature=0.2,
@@ -68,28 +68,36 @@ async def run_multiple_predictions(prompts, model_name="gemini-1.5-flash-001"):
         )
         tasks.append(task)
     
-    responses = await asyncio.gather(*tasks)
+    responses = []
+    for f in tqdm.asyncio.tqdm.as_completed(tasks):
+        responses.append(await f)
+
+    #responses = await asyncio.gather(*tasks)
     return responses
 
 def get_input_text(active_ingredient_data, contraindication_text):
-    text = "Produce a list of diseases contraindicated for the active ingredient " + str(active_ingredient_data) + " in the following contraindications list:\n" + str(contraindication_text) + "Please format the list as [\'item1\', \'item2\', ... ,\'itemN\']. Do not include any other text in the response. If no diseases are contraindicated for, return an empty list as \'[]\'. If the drug is only used for diagnostic purposes, return \'diagnostic/contrast/radiolabel\'. Do not include hypersensitivity or allergy to the named drug as a contraindication. This code is being deployed in bulk so if the contraindications section is just \<template\> or similar, return an empty list. Be mindful of the distinction between drugs being contraindicated for patient groups and drugs being contraindicated to cause a disease; please return only the latter."
+    text = "Produce a list of diseases contraindicated for the active ingredient " + str(active_ingredient_data) + " based on the following contraindications list:\n" + str(contraindication_text) + "Please format the list as [\'item1\', \'item2\', ... ,\'itemN\']. Do not include any other text in the response. If no diseases are contraindicated for, return an empty list as \'[]\'. If the drug is only used for diagnostic purposes, return \'diagnostic/contrast/radiolabel\'. Do not include hypersensitivity or allergy to the named drug as a contraindication. This code is being deployed in bulk so if the contraindications section is just \'template\' or similar, return an empty list. Only include conditions that the drug causes, and omit pre-exisitng conditions of the patients."
     return text   
 
 def generate_prompts(contraindications_data, active_ingredients_data, limit) -> list[str]:
     print("generating prompts...")
     prompts = []
     n_contraindications = len(contraindications_data)
-    for index, item in tqdm(enumerate(contraindications_data), total=n_contraindications):
+    for index, item in tqdm.tqdm(enumerate(contraindications_data), total=n_contraindications):
         if index < limit:
             prompts.append(get_input_text(active_ingredients_data[index], item))
     return prompts
 
 
 async def main():
+    
     drugs_to_contraindications = pd.read_excel("../contraindicationList.xlsx")
     contraindications_data = list(drugs_to_contraindications['contraindications'])
     active_ingredients_data = list(drugs_to_contraindications['active ingredient'])
-    prompts = generate_prompts(contraindications_data, active_ingredients_data, limit=200)
+
+    limit = len(contraindications_data)
+    #limit = 200
+    prompts = generate_prompts(contraindications_data, active_ingredients_data, limit=limit)
     print("found ", len(prompts), " prompts to feed to LLM API")
     start_time = time.time()
     responses = await run_multiple_predictions(prompts)
@@ -98,6 +106,16 @@ async def main():
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Processed {len(prompts)} prompts in {elapsed_time} seconds")
+
+    
+
+    data = pd.DataFrame({
+        "Active Ingredients": active_ingredients_data[0:limit],
+        "Structured Disease list": responses,
+        "Source Text": contraindications_data[0:limit]
+    })
+
+    data.to_excel("active_ingredients_to_structured_lists_v2.xlsx")
 
 
 if __name__ == "__main__":
