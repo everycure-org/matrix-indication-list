@@ -1,0 +1,30 @@
+# Here you can define all your data sets by using simple YAML syntax.
+#
+# Documentation for this file format can be found in "The Data Catalog"
+# Link: https://docs.kedro.org/en/stable/data/data_catalog.html
+#
+# The Data Catalog supports being able to reference the same file using two different Dataset implementations
+# (transcoding), templating and a way to reuse arguments that are frequently repeated. See more here:
+# https://docs.kedro.org/en/stable/data/data_catalog.html
+
+indications_fda:
+  filepath: /data/02_intermediate/labels_to_indications.xlsx
+  type: pandas.ExcelDataset
+
+structured_indications_lists_fda:
+  filepath: /data/02_intermediate/indications_to_lists.xlsx
+  type: pandas.ExcelDataset
+
+indications_with_ids_fda:
+  filepath: /data/03_primary/indication_list_fda.xlsx
+  type: pandas.ExcelDataset
+
+downfilled_mondo_list_fda:
+  filepath: /data/03_primary/indication_list_downfilled_fda.xlsx
+
+
+
+
+
+
+
