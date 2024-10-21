@@ -7,7 +7,7 @@ import time
 
 response_cache = {}
 
-@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def fetch(session, name, biolink_class):
     url = f'https://name-resolution-sri.renci.org/lookup?string={name}&autocomplete=false&offset=0&limit=10&biolink_type={biolink_class}'
     async with session.get(url, timeout=30) as response:
@@ -27,7 +27,7 @@ async def fetch_with_cache_and_progress(session, name, biolink_class, pbar):
     pbar.update(1)
     return result
 
-async def fetch_all(names, biolink_class, batch_size=1000):
+async def fetch_all(names, biolink_class, batch_size=2000):
     results = []
     for i in range(0, len(names), batch_size):
         batch = names[i:i+batch_size]
@@ -43,32 +43,36 @@ async def fetch_all(names, biolink_class, batch_size=1000):
 
 def get_curies_and_labels(response):
     if isinstance(response, str):  # This is an error message
+        print("error type 1")
+        print(str(response))
         return "Error", "Error"
     try: 
         df = pd.DataFrame.from_dict(response)
         try:
             return df.curie.iloc[0], df.label.iloc[0]
         except:
+            print("exception raised when returning result")
             return "Error", "Error"
     except:
         print(f"error reading in JSON for {str(response)}")
         return "Error", "Error"
 
 
-diseaseData = pd.read_excel('../active_ingredients_to_structured_lists_v2.xlsx')
+diseaseData = pd.read_excel('../active_ingredients_to_structured_lists.xlsx')
 diseaseList = []
 drugList = []
 source_list = []
+source_text = []
 
 print("creating tasks")
 n_sections = len(diseaseData)
-index_min = 0
-#limit = 100
-limit = n_sections
 for index, row in diseaseData.iterrows():
     drug = row['Active Ingredients']
     diseases = row['Structured Disease list']
-    if index >= index_min and index < limit:
+    src = row['Source Text']
+    test = False
+    limit = 100
+    if not test or (test and index < limit):
         curr_row_diseasesTreated = row['Structured Disease list']    
         if type(curr_row_diseasesTreated)!=float:
             curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').split(',')
@@ -77,6 +81,7 @@ for index, row in diseaseData.iterrows():
                 diseaseList.append(item)
                 drugList.append(drug)
                 source_list.append(diseases)
+                source_text.append(src)
 
 biolink_class_drug = "ChemicalOrDrugOrTreatment"
 biolink_class_disease = "DiseaseOrPhenotypicFeature"
@@ -88,6 +93,7 @@ responses_disease = asyncio.run(fetch_all(diseaseList, biolink_class_disease))
 
 drug_curie_label_list = list(get_curies_and_labels(r) for r in responses_drug)
 disease_curie_label_list = list(get_curies_and_labels(r) for r in responses_disease)
+#print(disease_curie_label_list)
 
 disease_IDs, disease_labels = zip(*disease_curie_label_list)
 drug_IDs, drug_labels = zip(*drug_curie_label_list)
@@ -99,7 +105,8 @@ data = pd.DataFrame({
     "disease list": diseaseList,
     "disease curie": disease_IDs,
     "disease label": disease_labels,
-    "source list": source_list
+    "source list": source_list,
+    "original source text": source_text,
 })
 
 data.to_excel("contraindicationList.xlsx")

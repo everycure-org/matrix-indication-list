@@ -72,7 +72,7 @@ def display_responses(prompts: List[str], responses: List[str]):
     display(HTML(html))
 
 def get_input_text(active_ingredient_data, contraindication_text):
-    text = "Produce a list of diseases contraindicated for the active ingredient " + str(active_ingredient_data) + " in the following contraindications list:\n" + str(contraindication_text) + "Please format the list as [\'item1\', \'item2\', ... ,\'itemN\']. Do not include any other text in the response. If no diseases are contraindicated for, return an empty list as \'[]\'. If the drug is only used for diagnostic purposes, return \'diagnostic/contrast/radiolabel\'. Do not include hypersensitivity or allergy to the named drug as a contraindication. This code is being deployed in bulk so if the contraindications section is just \<template\> or similar, return an empty list. Be mindful of the distinction between contraindications in patient groups and "
+    text = f"Produce a list of diseases contraindicated for the active ingredient {active_ingredient_data} in the following contraindications list:\n {contraindication_text} Please format the list as [\'item1\', \'item2\', ... ,\'itemN\']. Do not include any other text in the response. If no diseases are contraindicated for, return an empty list as \'[]\'. If the drug is only used for diagnostic purposes, return \'diagnostic/contrast/radiolabel\'. Do not include hypersensitivity or allergy to the named drug as a contraindication. This code is being deployed in bulk so if the contraindications section is just \<template\> or similar, return an empty list."
     return text   
 
 def generate_prompts(contraindications_data, active_ingredients_data, limit) -> list[str]:
