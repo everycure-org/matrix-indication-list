@@ -9,29 +9,39 @@
 
 indications_fda:
   type: pandas.ExcelDataset
-  filepath: data/02_intermediate/indications_fda.xlsx
-
+  filepath: data/02_intermediate/raw_indications_text_fda.xlsx
 
 structured_indications_lists_fda:
   type: pandas.ExcelDataset
-  filepath: data/02_intermediate/indications_to_lists.xlsx
-
+  filepath: data/02_intermediate/structured_lists.xlsx
 
 indications_with_ids_fda:
   type: pandas.ExcelDataset
   filepath: data/02_intermediate/indication_list_fda.xlsx
 
 
-# indications_ema:
+epar_table_4:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/EPAR_table_4.xlsx
+  load_args:
+    skiprows: [0,1,2,3,4,5,6,7]
 
-# structured_indications_lists_ema:
 
-# indications_with_ids_ema:
+structured_indications_lists_ema:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/structured_lists_ema.xlsx
 
 
-# indications_pmda:
+indications_with_ids_ema:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/indication_list_ema.xlsx
 
-# structured_indications_lists_pmda:
+
+
+indications_pmda:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pmda_approvals.csv
+
 
 # indications_with_ids_pmda:
 

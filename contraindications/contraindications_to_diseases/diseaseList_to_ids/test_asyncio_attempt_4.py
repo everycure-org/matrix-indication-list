@@ -55,7 +55,7 @@ def get_curies_and_labels(response):
         return "Error", "Error"
 
 
-diseaseData = pd.read_excel('../active_ingredients_to_structured_lists_v2.xlsx')
+diseaseData = pd.read_excel('../active_ingredients_to_structured_lists.xlsx')
 diseaseList = []
 drugList = []
 source_list = []

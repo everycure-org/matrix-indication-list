@@ -96,7 +96,6 @@ async def main():
     active_ingredients_data = list(drugs_to_contraindications['active ingredient'])
 
     limit = len(contraindications_data)
-    #limit = 200
     prompts = generate_prompts(contraindications_data, active_ingredients_data, limit=limit)
     print("found ", len(prompts), " prompts to feed to LLM API")
     start_time = time.time()
