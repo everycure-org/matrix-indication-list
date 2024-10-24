@@ -4,7 +4,7 @@ import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_exponential
 import tqdm.asyncio
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+@retry(wait=wait_exponential(multiplier=1, max=4))
 async def fetch_with_progress(session, name, biolink_type):
     url = f'https://name-resolution-sri.renci.org/lookup?string={name}&autocomplete=false&offset=0&limit=10&biolink_type={biolink_type}'
     async with session.get(url) as response:

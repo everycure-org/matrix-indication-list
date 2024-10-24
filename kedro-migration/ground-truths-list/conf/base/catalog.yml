@@ -1,0 +1,54 @@
+# Here you can define all your data sets by using simple YAML syntax.
+#
+# Documentation for this file format can be found in "The Data Catalog"
+# Link: https://docs.kedro.org/en/stable/data/data_catalog.html
+#
+# The Data Catalog supports being able to reference the same file using two different Dataset implementations
+# (transcoding), templating and a way to reuse arguments that are frequently repeated. See more here:
+# https://docs.kedro.org/en/stable/data/data_catalog.html
+
+indications_fda:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/raw_indications_text_fda.xlsx
+
+structured_indications_lists_fda:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/structured_lists.xlsx
+
+indications_with_ids_fda:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/indication_list_fda.xlsx
+
+
+epar_table_4:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/EPAR_table_4.xlsx
+  load_args:
+    skiprows: [0,1,2,3,4,5,6,7]
+
+
+structured_indications_lists_ema:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/structured_lists_ema.xlsx
+
+
+indications_with_ids_ema:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/indication_list_ema.xlsx
+
+
+
+indications_pmda:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pmda_approvals.csv
+
+
+# indications_with_ids_pmda:
+
+
+# merged_indications_list:
+
+
+# downfilled_mondo_list_fda:
+#   filepath: /data/03_primary/indication_list_downfilled_fda.xlsx
+
