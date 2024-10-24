@@ -48,7 +48,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: merge_contraindications_and_indications/ground-truths-list.tsv # Replace with the path to your file
-          asset_name: grount-truths-list.tsv            # Replace with the name you want for the uploaded asset
+          asset_name: ground-truths-list.tsv            # Replace with the name you want for the uploaded asset
           asset_content_type: application/octet-stream
 
       # Step 3: Upload a file as a release asset
