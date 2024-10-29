@@ -1,0 +1,90 @@
+epar_table_4:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/EPAR_table_4.xlsx
+  load_args:
+    skiprows: [0,1,2,3,4,5,6,7]
+
+ema_structured_indications_list:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/structured_lists_ema.xlsx"
+
+ema_indications_list_with_ids:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/indications_ema.xlsx"
+
+
+pmda_approvals:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pmda_approvals.csv
+
+pmda_structured_indications_list:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/structured_lists_pmda.xlsx
+
+pmda_indications_list_with_ids:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/indications_pmda.xlsx"
+
+dailymed_labels:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/dailymed_labels.xlsx
+
+fda_structured_indications_list:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/structured_lists_fda.xlsx
+
+fda_indications_list_with_ids:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/indications_fda.xlsx"
+
+merged_list:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/merged_list.xlsx
+
+indication_list_merged:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/indication_list_merged.tsv
+  save_args: 
+    sep: "\t"
+  load_args:
+    sep: "\t"
+
+mondo_edges:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/mondo_edges.tsv
+  load_args: 
+    sep: "\t"
+
+mondo_nodes:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/mondo_nodes.tsv
+  load_args: 
+    sep: "\t"
+
+indication_list_downfilled:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/indication_list_downfilled.tsv
+  save_args: 
+    sep: "\t"
+  load_args: 
+    sep: "\t"
+
+dailymed_label_contraindications:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/dailymed_contraindications.xlsx
+
+structured_contraindications_lists_fda:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/structured_contraindications_list.xlsx
+
+contraindications_list_with_ids_fda:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/contraindicationsList.xlsx
+
+ground_truths_list:
+  type: pandas.CSVDataset
+  filepath: data/03_primary/ground_truths_list.tsv
+  load_args:
+    sep: "\t"
+  save_args:
+    sep: "\t"

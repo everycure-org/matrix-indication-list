@@ -164,10 +164,3 @@ def structured_disease_lists_to_edges_with_IDs_fda(inputList: pd.DataFrame) -> p
     return sheetData
 
 
-
-
-
-def downfill_mondo(inputList: pd.DataFrame) -> pd.DataFrame:
-    return pd.DataFrame()
-
-

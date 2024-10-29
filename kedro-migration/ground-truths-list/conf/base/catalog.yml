@@ -26,11 +26,9 @@ epar_table_4:
   load_args:
     skiprows: [0,1,2,3,4,5,6,7]
 
-
-structured_indications_lists_ema:
+indications_to_structured_disease_lists_fda:
   type: pandas.ExcelDataset
   filepath: data/02_intermediate/structured_lists_ema.xlsx
-
 
 indications_with_ids_ema:
   type: pandas.ExcelDataset
