@@ -19,7 +19,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func = nodes.generate_contraindications_list,
                 inputs = "structured_contraindications_lists_fda",
                 outputs = "contraindications_list_with_ids_fda",
-                name = "build_fda_contraindications_list"
+                name = "build-fda-contraindications-list"
             ),
          node(
                 func = nodes.merge_contraindications_and_indications,

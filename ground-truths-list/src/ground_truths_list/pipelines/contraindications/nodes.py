@@ -140,7 +140,7 @@ async def process_all_prompts(
     total_batches = math.ceil(len(prompts) / batch_size)
     
     # Create progress bar for batches
-    with tqdm(total=len(prompts), desc="Processing prompts") as pbar:
+    with tqdm.tqdm(total=len(prompts), desc="Processing prompts") as pbar:
         # Process prompts in batches
         for i in range(0, len(prompts), batch_size):
             batch = prompts[i:i + batch_size]
@@ -217,6 +217,7 @@ async def llm_extract_contraindications(data_in: pd.DataFrame) -> pd.DataFrame:
 
 def extract_structured_lists_contraindications_dailymed (dailymed_contraindications: pd.DataFrame)->pd.DataFrame:
     data = asyncio.run(llm_extract_contraindications(dailymed_contraindications))
+    return data
 
 
 
@@ -250,7 +251,7 @@ async def fetch_all(names, biolink_class, batch_size=1000):
     for i in range(0, len(names), batch_size):
         batch = names[i:i+batch_size]
         async with aiohttp.ClientSession() as session:
-            pbar = tqdm(total=len(batch), desc=f"Processing batch {i//batch_size + 1}")
+            pbar = tqdm.tqdm(total=len(batch), desc=f"Processing batch {i//batch_size + 1}")
             tasks = [fetch_with_cache_and_progress(session, name, biolink_class, pbar) for name in batch]
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
             results.extend(batch_results)
@@ -337,9 +338,9 @@ def merge_contraindications_and_indications(contraindications: pd.DataFrame, ind
     #contraindications = pd.read_excel("../contraindications/contraindications_to_diseases/diseaseList_to_ids/contraindication_list_filled.xlsx")
 
     print("removing unneeded columns and dropping duplicate entries")
-    contraindications.drop('Unnamed: 0.2', axis=1, inplace=True)
-    contraindications.drop('Unnamed: 0.1', axis=1, inplace=True)
-    contraindications.drop('Unnamed: 0', axis=1, inplace=True)
+    #contraindications.drop('Unnamed: 0.2', axis=1, inplace=True)
+    #contraindications.drop('Unnamed: 0.1', axis=1, inplace=True)
+    #contraindications.drop('Unnamed: 0', axis=1, inplace=True)
     contraindications.drop_duplicates(subset=['active ingredients', 'drug ID', 'disease curie'], keep='first')
 
     print("tagging contraindications and indications")

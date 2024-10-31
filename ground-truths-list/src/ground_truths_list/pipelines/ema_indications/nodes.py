@@ -16,6 +16,11 @@ import vertexai.preview.generative_models as generative_models
 from io import StringIO
 import requests
 
+testing = True
+limit = 100
+
+
+
 def getCurie_Disease(name):
     itemRequest = 'https://name-resolution-sri.renci.org/lookup?string=' + name + '&autocomplete=false&offset=0&limit=10&biolink_type=DiseaseOrPhenotypicFeature'
     returned = (pd.read_json(StringIO(requests.get(itemRequest).text)))
@@ -174,22 +179,22 @@ def extract_ema_indications (inputData: pd.DataFrame) -> pd.DataFrame:
     drugsList = []
     originalText = []
     for index, ind in tqdm(enumerate(nonRefusedIndications), total=len(nonRefusedIndications)):
-        if not ind or type(ind)==float:
-            print("found nan value")
-            indicationDiseaseList.append("NA")
-            drugsList.append(drugNames_nonRefused[index])
-            originalText.append("NA")
-        else:
-            drugsList.append(drugNames_nonRefused[index])
-            originalText.append(ind)
-            try:
-                prompt = "Produce a list of diseases treated in the following therapeutic indications list: " + ind +".\n Please format the list as ['item1', 'item2', ... ,'itemN']. Do not inlude any other text in the response. If no diseases are treated, return an empty list as '[]'. If the therapy is preventative, add the tag (preventative) to the item. If the drug is only used for diagnostic purposes, return 'diagnostic/contrast/radiolabel'."
-                response = generate(prompt, safety_settings, generation_config)
-                print(response)
-                indicationDiseaseList.append(response.upper())
-            except:
-                print("LLM extraction failure")
-                indicationDiseaseList.append("LLM failed to extract indications")
+        if not testing or index < limit:
+            if not ind or type(ind)==float:
+                print("found nan value")
+                indicationDiseaseList.append("NA")
+                drugsList.append(drugNames_nonRefused[index])
+                originalText.append("NA")
+            else:
+                drugsList.append(drugNames_nonRefused[index])
+                originalText.append(ind)
+                try:
+                    prompt = "Produce a list of diseases treated in the following therapeutic indications list: " + ind +".\n Please format the list as ['item1', 'item2', ... ,'itemN']. Do not inlude any other text in the response. If no diseases are treated, return an empty list as '[]'. If the therapy is preventative, add the tag (preventative) to the item. If the drug is only used for diagnostic purposes, return 'diagnostic/contrast/radiolabel'."
+                    response = generate(prompt, safety_settings, generation_config)
+                    indicationDiseaseList.append(response.upper())
+                except:
+                    print("LLM extraction failure")
+                    indicationDiseaseList.append("LLM failed to extract indications")
     sheetData = pd.DataFrame({
         'drug active ingredients': drugsList,
         'diseases': indicationDiseaseList,
@@ -223,36 +228,36 @@ def build_list_ema(diseaseData: pd.DataFrame) -> pd.DataFrame:
     drugList = []
     drugIDList = []
     drugLabelList = []
+    
 
-    for index, row in tqdm(diseaseData.iterrows(), total = len(diseaseData)):
-        curr_row_diseasesTreated = row['diseases']
-        if type(curr_row_diseasesTreated)!=float:
-           # print(index)
-            
-            curr_row_drugsInTherapy = row['drug active ingredients']
-            curr_row_disease_ids = []
-            curr_row_disease_id_labels = []
-            curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').split(',')
+    
+    for index, row in tqdm(diseaseData.iterrows(), total = len(diseaseData) if not testing else min(limit, len(diseaseData))):
+        if not testing or index < limit:
+            curr_row_diseasesTreated = row['diseases']
+            if type(curr_row_diseasesTreated)!=float:
+            # print(index)
+                
+                curr_row_drugsInTherapy = row['drug active ingredients']
+                curr_row_disease_ids = []
+                curr_row_disease_id_labels = []
+                curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').split(',')
 
-            drugID, drugIDLabel = identify(curr_row_drugsInTherapy)
+                drugID, drugIDLabel = identify(curr_row_drugsInTherapy)
 
-            for idx2,item in enumerate(curr_row_diseaseList):
-                item = item.strip().replace(" \n","").replace(" (PREVENTATIVE)","")
-                curr_row_diseaseList[idx2] = item
-                #print(item)
-                try:
-                    #print(item)
-                    diseaseCurie,diseaseLabel = getCurie_Disease(item)
-                    #print(diseaseCurie[0])
-                    diseaseIDList.append(diseaseCurie[0])
-                    diseaseLabelList.append(diseaseLabel[0])
-                    diseaseList.append(item)
-                    drugList.append(curr_row_drugsInTherapy)
-                    drugIDList.append(drugID)
-                    drugLabelList.append(drugIDLabel)
-                    
-                except:
-                    print("error during name resolving")
+                for idx2,item in enumerate(curr_row_diseaseList):
+                    item = item.strip().replace(" \n","").replace(" (PREVENTATIVE)","")
+                    curr_row_diseaseList[idx2] = item
+                    try:
+                        diseaseCurie,diseaseLabel = getCurie_Disease(item)
+                        diseaseIDList.append(diseaseCurie[0])
+                        diseaseLabelList.append(diseaseLabel[0])
+                        diseaseList.append(item)
+                        drugList.append(curr_row_drugsInTherapy)
+                        drugIDList.append(drugID)
+                        drugLabelList.append(drugIDLabel)
+                        
+                    except:
+                        print("error during name resolving")
     sheetData = pd.DataFrame(data=[diseaseIDList, diseaseLabelList, diseaseList, drugList, drugIDList, drugLabelList]).transpose()
     sheetData.columns = ['disease IDs', 'disease ID labels', 'list of diseases', 'active ingredients in therapy', 'drug ID', 'drug ID Label']
     return sheetData
