@@ -50,7 +50,7 @@ def merge_lists (inputList_fda: pd.DataFrame, inputList_ema: pd.DataFrame, input
         unique_disease_list = sorted(list(set(df3.iloc[i,5])))
         df3.iloc[i,5] = unique_disease_list
 
-    return df3
+    return df2
     #df3.to_csv("indicationList.tsv", sep="\t")
 
 
@@ -63,15 +63,20 @@ def get_edges(graph, name):
 def downfill(graph: nx.DiGraph, drug: str, disease: str, curr: pd.DataFrame, mondoNodes, inheritanceString: str):
     #print("downfilling treats edge between ", drug, " and ", disease)
     drugInfo = curr[curr['drug ID']==drug].iloc[0]
-    
-    curr.loc[len(curr.index)] = [drug + "|" + disease, 
-                                 mondoNodes[mondoNodes.id==disease]['name'].to_string(index=False), 
-                                 drugInfo['drug ID Label'],
-                                 drug, 
-                                 disease, 
-                                 drugInfo['active ingredients in therapy'], 
-                                 inheritanceString,
-                                 True] 
+    try:
+        curr.loc[len(curr)] = [drug + "|" + disease, 
+                                    mondoNodes[mondoNodes.id==disease]['name'].to_string(index=False), 
+                                    drugInfo['drug ID Label'],
+                                    drug, 
+                                    disease, 
+                                    drugInfo['active ingredients in therapy'], 
+                                    inheritanceString,
+                                    True] 
+    except Exception as e:
+        print(e)
+        print(curr)
+        print(curr.index)
+        
     children = get_edges(graph, disease)
     if len(children)==0:
         return

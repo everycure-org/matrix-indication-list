@@ -124,25 +124,27 @@ def extract_pmda_indications(input_list: pd.DataFrame) -> pd.DataFrame:
     indicationDiseaseList = []
     drugsList = []
     originalText = []
-
+    testing = True
+    limit = 100
     for index, ind in tqdm(enumerate(indications), total=len(indications)):
-        #print(index)
-        if not ind or type(ind)==float:
-            print("found nan value")
-            indicationDiseaseList.append("NA")
-            drugsList.append(drugnames[index])
-            originalText.append("NA")
-        else:
-            drugsList.append(drugnames[index])
-            originalText.append(ind)
-            try:
-                prompt = "Produce a list of diseases treated in the following therapeutic indications list: " + ind +".\n Please format the list as ['item1', 'item2', ... ,'itemN']. Do not inlude any other text in the response. If no diseases are treated, return an empty list as '[]'. If the therapy is preventative, add the tag (preventative) to the item. If the drug is only used for diagnostic purposes, return 'diagnostic/contrast/radiolabel'."
-                response = generate(prompt, safety_settings, generation_config)
-                #print(response)
-                indicationDiseaseList.append(response.upper())
-            except:
-                print("LLM extraction failure")
-                indicationDiseaseList.append("LLM failed to extract indications")
+        if not testing or index < limit:
+            #print(index)
+            if not ind or type(ind)==float:
+                print("found nan value")
+                indicationDiseaseList.append("NA")
+                drugsList.append(drugnames[index])
+                originalText.append("NA")
+            else:
+                drugsList.append(drugnames[index])
+                originalText.append(ind)
+                try:
+                    prompt = "Produce a list of diseases treated in the following therapeutic indications list: " + ind +".\n Please format the list as ['item1', 'item2', ... ,'itemN']. Do not inlude any other text in the response. If no diseases are treated, return an empty list as '[]'. If the therapy is preventative, add the tag (preventative) to the item. If the drug is only used for diagnostic purposes, return 'diagnostic/contrast/radiolabel'."
+                    response = generate(prompt, safety_settings, generation_config)
+                    #print(response)
+                    indicationDiseaseList.append(response.upper())
+                except:
+                    print("LLM extraction failure")
+                    indicationDiseaseList.append("LLM failed to extract indications")
 
     sheetData = pd.DataFrame(data=[drugsList,indicationDiseaseList, originalText]).transpose()
     sheetData.columns = ['drug active ingredients', 'diseases', 'original text']

@@ -15,6 +15,7 @@ import math
 import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
 import tqdm.asyncio
+import numpy as np
 
 # Set your Google Cloud project ID and location
 PROJECT_ID = "mtrx-wg2-modeling-dev-9yj"
@@ -369,7 +370,7 @@ def merge_contraindications_and_indications(contraindications: pd.DataFrame, ind
     result.drop('source list', axis=1, inplace=True)
 
     print("adding indication / contraindication tags to drugs...")
-    for idx, row in tqdm(result.iterrows(), total = len(result)):
+    for idx, row in tqdm.tqdm(result.iterrows(), total = len(result)):
         if np.isnan((row['indication'])):
             result.loc[idx, "indication"] = False
             #result['indication'][idx]=False
