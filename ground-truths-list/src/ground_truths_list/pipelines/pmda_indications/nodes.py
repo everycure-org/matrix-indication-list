@@ -101,20 +101,20 @@ def extract_pmda_indications(input_list: pd.DataFrame) -> pd.DataFrame:
     ## WARNING: THIS COSTS MONEY TO RUN ####
     ##   THIS PORTION CONFIRMS YOUR RUN ####
     ########################################
-    print("WARNING: This section of the script uses Gemini resources - confirm that you want to run it?")
-    print("Waiting 5 seconds so you don't just hit continue without thinking...")
-    time.sleep(5)
+    # print("WARNING: This section of the script uses Gemini resources - confirm that you want to run it?")
+    # print("Waiting 5 seconds so you don't just hit continue without thinking...")
+    # time.sleep(5)
 
-    successfulInput = False
-    while not successfulInput:
-        scriptRun = input('Run the script? (yes / no)')
-        if scriptRun == "yes":
-            successfulInput = True
-        elif scriptRun == "no":
-            assert(0)
-        else:
-            print("Bad input. Please input ''yes'' / ''no''")
-            successfulInput = False
+    # successfulInput = False
+    # while not successfulInput:
+    #     scriptRun = input('Run the script? (yes / no)')
+    #     if scriptRun == "yes":
+    #         successfulInput = True
+    #     elif scriptRun == "no":
+    #         assert(0)
+    #     else:
+    #         print("Bad input. Please input ''yes'' / ''no''")
+    #         successfulInput = False
 
 
     ############################################
@@ -124,7 +124,7 @@ def extract_pmda_indications(input_list: pd.DataFrame) -> pd.DataFrame:
     indicationDiseaseList = []
     drugsList = []
     originalText = []
-    testing = True
+    testing = False
     limit = 100
     for index, ind in tqdm(enumerate(indications), total=len(indications)):
         if not testing or index < limit:

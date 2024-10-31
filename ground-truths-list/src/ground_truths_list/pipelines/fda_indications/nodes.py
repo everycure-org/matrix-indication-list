@@ -14,7 +14,7 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, Part, SafetySetting, FinishReason
 import vertexai.preview.generative_models as generative_models
 
-testing = True
+testing = False
 limit = 100
 
 def generate(input_text, safety_settings, generation_config):

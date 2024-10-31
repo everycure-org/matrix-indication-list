@@ -24,7 +24,7 @@ LOCATION = "us-central1"
 # Initialize Vertex AI
 aiplatform.init(project=PROJECT_ID, location=LOCATION)
 
-testing = True
+testing = False
 limit = 100
 
 @dataclass
@@ -163,14 +163,14 @@ def get_input_text(active_ingredient_data, contraindication_text):
     text = "Produce a list of diseases contraindicated for the active ingredient " + str(active_ingredient_data) + " based on the following contraindications list:\n" + str(contraindication_text) + "Please format the list as [\'item1\', \'item2\', ... ,\'itemN\']. Do not include any other text in the response. If no diseases are contraindicated for, return an empty list as \'[]\'. If the drug is only used for diagnostic purposes, return \'diagnostic/contrast/radiolabel\'. Do not include hypersensitivity or allergy to the named drug as a contraindication. This code is being deployed in bulk so if the contraindications section is just \'template\' or similar, return an empty list. Only include conditions that the drug causes, and omit pre-exisitng conditions of the patients."
     return text   
 
-def generate_prompts(contraindications_data, active_ingredients_data, limit) -> List[str]:
+def generate_prompts(contraindications_data, active_ingredients_data, pLimit) -> List[str]:
     print("Generating prompts...")
     prompts = []
-    n_contraindications = min(len(contraindications_data), limit)
-    
+    n_contraindications = min(len(contraindications_data), pLimit)
+    print(f"generating {n_contraindications} prompts")
     for index in range(n_contraindications):
         prompts.append(get_input_text(active_ingredients_data[index], contraindications_data[index]))
-    
+    print(f"generated {len(prompts)} prompts")
     return prompts
 
 async def llm_extract_contraindications(data_in: pd.DataFrame) -> pd.DataFrame:
@@ -180,12 +180,12 @@ async def llm_extract_contraindications(data_in: pd.DataFrame) -> pd.DataFrame:
     REQUESTS_PER_MINUTE = 200  # Maximum number of API requests per minute
     
     # Load data
-    drugs_to_contraindications = data_in#pd.read_excel("../contraindicationList.xlsx")
+    drugs_to_contraindications = data_in
     contraindications_data = list(drugs_to_contraindications['contraindications'])
     active_ingredients_data = list(drugs_to_contraindications['active ingredient'])
 
     #limit = len(contraindications_data)
-    prompts = generate_prompts(contraindications_data, active_ingredients_data, limit=limit if testing else len(contraindications_data))
+    prompts = generate_prompts(contraindications_data, active_ingredients_data, pLimit=len(contraindications_data))
     
     print(f"Starting processing of {len(prompts)} prompts:")
     print(f"- Batch size: {BATCH_SIZE}")
@@ -195,7 +195,7 @@ async def llm_extract_contraindications(data_in: pd.DataFrame) -> pd.DataFrame:
     start_time = time.time()
     
     responses = await process_all_prompts(
-        prompts=prompts[0:limit],
+        prompts=prompts,
         batch_size=BATCH_SIZE,
         max_concurrent=MAX_CONCURRENT,
         requests_per_minute=REQUESTS_PER_MINUTE
@@ -272,14 +272,12 @@ def get_curies_and_labels(response):
         except:
             print("exception raised when returning result")
             return "Error", "Error"
-    except:
-        print(f"error reading in JSON for {str(response)}")
+    except Exception as e:
+        print(f"error reading in JSON for {str(response)}: {e}")
         return "Error", "Error"
 
 
 def generate_contraindications_list(diseaseData: pd.DataFrame)-> pd.DataFrame:
-
-#diseaseData = pd.read_excel('../active_ingredients_to_structured_lists.xlsx')
     diseaseList = []
     drugList = []
     source_list = []
@@ -291,9 +289,7 @@ def generate_contraindications_list(diseaseData: pd.DataFrame)-> pd.DataFrame:
         drug = row['Active Ingredients']
         diseases = row['Structured Disease list']
         src = row['Source Text']
-        test = False
-        limit = 100
-        if not test or (test and index < limit):
+        if not testing or index < limit:
             curr_row_diseasesTreated = row['Structured Disease list']    
             if type(curr_row_diseasesTreated)!=float:
                 curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').split(',')
