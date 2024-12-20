@@ -15,3 +15,4 @@ pre-commit
 poetry
 tqdm
 openai
+seaborn

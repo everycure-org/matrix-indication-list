@@ -4,8 +4,6 @@ generated using Kedro 0.19.9
 """
 
 import pandas as pd
-
-import pandas as pd
 from tqdm import tqdm
 import rdflib
 import networkx as nx
@@ -94,17 +92,11 @@ def mondo_downfill_operation(indicationList_merged: pd.DataFrame, mondo_edges: p
     indication_list['inferred_from_mondo'] = list(K)
 
     print("importing mondo content and filtering nodes...")
-    #mondo_edges = pd.read_csv("mondo_edges.tsv", sep="\t")
-    #mondo_nodes = pd.read_csv("mondo_nodes.tsv", sep="\t")
 
     disease_nodes = mondo_nodes[mondo_nodes.category=='biolink:Disease']
-
     disease_edges = mondo_edges[mondo_edges['subject'].str.contains("MONDO")]
     disease_edges = disease_edges[disease_edges['object'].str.contains("MONDO")]
     disease_edges = disease_edges[disease_edges['predicate']=="biolink:subclass_of"]
-
-    #disease_nodes.to_excel("mondo_disease_nodes.xlsx")
-    #disease_edges.to_excel("mondo_disease_edges.xlsx")
 
 
     G = nx.DiGraph()
@@ -122,7 +114,7 @@ def mondo_downfill_operation(indicationList_merged: pd.DataFrame, mondo_edges: p
     for idx, disease in tqdm(enumerate(list_disease_nodes), total=len(list_disease_nodes)):
         store_dict = {}
         children = get_edges(G, disease)
-        if len(children)>0 and len(children) <= 3:
+        if len(children)>0:
             child_diseases = [x[1] for x in list(children)]
             #print(disease, " has ", len(child_diseases) ," downhill children: ", child_diseases)
             for K in child_diseases:
