@@ -1,1 +1,4 @@
 disease_lookup_name: 
+
+path_to_fda_labels: "/Volumes/MML/dailymed_labels/"
+

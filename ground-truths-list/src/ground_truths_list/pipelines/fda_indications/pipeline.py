@@ -11,6 +11,13 @@ from . import nodes
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
         node(
+            func = nodes.mine_labels,
+            inputs = "params:path_to_fda_labels",
+            outputs = "dailymed_labels",
+            name = "mine-dailymed-labels",
+        ),
+
+        node(
             func = nodes.extract_fda_indications,
             inputs = "dailymed_labels",
             outputs = "fda_structured_indications_list",

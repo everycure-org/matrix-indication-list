@@ -4,15 +4,22 @@ generated using Kedro 0.19.9
 """
 import pandas as pd
 from tqdm import tqdm
-import pandas as pd
 from io import StringIO
 import requests
 
-import pandas as pd 
 import base64
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part, SafetySetting, FinishReason
 import vertexai.preview.generative_models as generative_models
+
+import os
+import xml.etree.ElementTree as ET
+import json
+import zipfile
+import os
+import string
+import re
+
 
 testing = True
 limit = 100
@@ -33,6 +40,147 @@ def generate(input_text, safety_settings, generation_config):
             resText+=response.text
             
         return resText
+
+def strip_spaces(myString):
+    _RE_COMBINE_WHITESPACE = re.compile(r"(?a:\s+)")
+    _RE_STRIP_WHITESPACE = re.compile(r"(?a:^\s+|\s+$)")
+    myString = _RE_COMBINE_WHITESPACE.sub(" ", myString)
+    myString = _RE_STRIP_WHITESPACE.sub("", myString)
+    return myString
+
+def unzip_file(zip_path, extract_to_folder):
+    if not os.path.isfile(zip_path):
+        raise FileNotFoundError(f"The file {zip_path} does not exist.")
+    os.makedirs(extract_to_folder, exist_ok=True) 
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to_folder)
+       #print(f"Extracted all contents to {extract_to_folder}")
+
+def extract_active_ingredient(xml_file):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    ns = {'fda': 'urn:hl7-org:v3'}
+    active_ingredients = []
+    for ingredient in root.findall(".//fda:activeMoiety/fda:name", ns):
+        active_ingredients.append(ingredient.text)
+    return active_ingredients
+        
+def getIndications(xmlfilepath):
+    tree = ET.parse(xmlfilepath)
+    root = tree.getroot()
+    ns = {'hl7': 'urn:hl7-org:v3'}
+    sections = root.findall('.//hl7:section', namespaces=ns)
+    for section in sections:
+        codeSection = section.find('.//hl7:code', namespaces=ns)
+        code = codeSection.get('code') if codeSection is not None else "no code"
+        if code == "34067-9":
+            text_elem = section.find('.//hl7:text', namespaces=ns)
+            try:
+                text_content = ''.join(text_elem.itertext()).strip()
+            except:
+                print('text_elem was empty')
+                return ""
+            return strip_spaces(text_content.strip(string.whitespace.replace(" ", "")))
+        else:
+            text_elem = None    
+    return None
+
+
+def getIndications(xmlfilepath):
+    tree = ET.parse(xmlfilepath)
+    root = tree.getroot()
+    ns = {'hl7': 'urn:hl7-org:v3'}
+    sections = root.findall('.//hl7:section', namespaces=ns)
+    for section in sections:
+        codeSection = section.find('.//hl7:code', namespaces=ns)
+        code = codeSection.get('code') if codeSection is not None else "no code"
+        if code == "34067-9":
+            text_elem = section.find('.//hl7:text', namespaces=ns)
+            try:
+                text_content = ''.join(text_elem.itertext()).strip()
+            except:
+                print('text_elem was empty')
+                return ""
+            return strip_spaces(text_content.strip(string.whitespace.replace(" ", "")))
+        else:
+            text_elem = None    
+    return None
+
+def getPediatricConsiderations(xmlfilepath):
+    indicationsNameTable = ['Indications','INDICATIONS', "INDICATIONS AND USAGE", "Indications and Usage", 'INDICATIONS ', 'Indications and usage', 'INDICATIONS:', 'INDICATIONS & USAGE', 'INDICATIONS AND USAGE:', 'INDICATIONS AND USAGE ', 'INDICATIONS AND USE', '1 INDICATIONS AND USAGE']
+    tree = ET.parse(xmlfilepath)
+    root = tree.getroot()
+    ns = {'hl7': 'urn:hl7-org:v3'}
+    sections = root.findall('.//hl7:section', namespaces=ns)
+    for section in sections:
+        codeSection = section.find('.//hl7:code', namespaces=ns)
+        code = codeSection.get('code') if codeSection is not None else "no code"
+        if code == "34067-9":
+            text_elem = section.find('.//hl7:text', namespaces=ns)
+            text_content = ''.join(text_elem.itertext()).strip()
+            return strip_spaces(text_content.strip(string.whitespace.replace(" ", "")))
+        else:
+            text_elem = None
+        
+    return None
+
+def get_indications_codes(xmlfilepath):
+    print("Finding indications for ", xmlfilepath)
+    tree = ET.parse(xmlfilepath)
+    root = tree.getroot()
+    ns = {'hl7': 'urn:hl7-org:v3'}
+    sections = root.findall('.//hl7:code', namespaces=ns)
+    for code in sections:
+        print(code.get('code'))
+
+
+def mine_labels(dir: str) -> pd.DataFrame:
+    indicationsList = []
+    ingredientsList = []
+    counts = 0
+    foundCounts = 0
+    notFoundCounts = 0
+    dirs = []
+    # TODO: automatically find, download, unzip all of the dailymed folders
+    labelFolders = ["prescription_1/", "prescription_2/", "prescription_3/", "prescription_4/", "prescription_5/"]
+    
+    for label in labelFolders:
+        dirs.append(dir+label)
+
+    for directory in (dirs):
+        for files in tqdm(os.listdir(directory), desc=f"reading directory {directory}"):
+            if files.endswith(".zip"):
+                fpath = directory + files
+                fileRoot = files.replace(".zip","")
+                dest = directory + fileRoot
+                try:
+                    unzip_file(fpath,dest)
+                except:
+                    #print("failed to unzip file ", fpath)
+                    continue
+                xmlfile=""
+                for contents in os.listdir(dest):
+                    if contents.endswith(".xml"):
+                        xmlfile=contents.replace("._","")
+                xmlfilepath = dest+"/"+xmlfile
+                indications = getIndications(xmlfilepath)
+                active_ingredients = extract_active_ingredient(xmlfilepath)
+                for ind, item in enumerate(active_ingredients):
+                    active_ingredients[ind]=item.upper()
+                ingredientsList.append(set(active_ingredients))
+                if indications is not None:
+                    indicationsList.append(indications)
+                    foundCounts += 1
+                    #print(foundCounts, " indications successfully found so far")
+                else:
+                    notFoundCounts += 1
+                    #print(notFoundCounts, " indications not found so far, failed to find for ", files)
+                    indicationsList.append("")
+                counts +=1
+        
+    print("finished ingesting indications")
+    data = pd.DataFrame({'active ingredient':ingredientsList, 'indications':indicationsList})
+    return data
 
 
 def extract_fda_indications(inputList: pd.DataFrame, ) -> pd.DataFrame:
