@@ -13,7 +13,7 @@ def join_strings(series, delimiter=", "):
         return delimiter.join(series)
 
 
-def merge_lists (inputList_fda: pd.DataFrame, inputList_ema: pd.DataFrame, inputList_pmda: pd.DataFrame) -> pd.DataFrame:
+def merge_lists(inputList_fda: pd.DataFrame, inputList_ema: pd.DataFrame, inputList_pmda: pd.DataFrame) -> pd.DataFrame:
     fda_frame = inputList_fda#pd.read_excel("../dailymed_ingest/labels_to_diseases/diseases_to_IDs/indication-list-fda-v1.xlsx")
     ema_frame = inputList_ema#pd.read_excel("../ema_indications_ingest/diseases_to_IDs/indication-list-ema-v1.xlsx")
     pmda_frame = inputList_pmda#pd.read_excel("../pmda_indications_ingest/diseases_to_IDs/indication-list-pmda-v1.xlsx")

@@ -70,8 +70,6 @@ def lookup_drugs_that_treat_disease_and_subclasses(name: str, ground_truth_list:
 
     return drug_IDs
 
-
-
 # Recursive downfill
 def downfill(graph: nx.DiGraph, drug: str, disease: str, curr: pd.DataFrame, mondoNodes, inheritanceString: str):
     #print("downfilling treats edge between ", drug, " and ", disease)

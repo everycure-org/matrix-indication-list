@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/marcello-deluca/Research/ARPA-H/matrix-repos/matrix-indication-list/ground-truths-list/mlruns/469852071446802087/b26a2cdc76c64dc5ad18121f44645381/artifacts
+end_time: 1736391693874
+entry_point_name: ''
+experiment_id: '469852071446802087'
+lifecycle_stage: active
+run_id: b26a2cdc76c64dc5ad18121f44645381
+run_name: __default__
+run_uuid: b26a2cdc76c64dc5ad18121f44645381
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1736391634150
+status: 3
+tags: []
+user_id: marcello-deluca

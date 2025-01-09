@@ -14,7 +14,7 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, Part, SafetySetting, FinishReason
 import vertexai.preview.generative_models as generative_models
 
-testing = False
+testing = True
 limit = 100
 
 def generate(input_text, safety_settings, generation_config):
@@ -28,7 +28,6 @@ def generate(input_text, safety_settings, generation_config):
         safety_settings=safety_settings,
         stream=True,
         )
-        
         resText = ""
         for response in responses:
             resText+=response.text
@@ -37,17 +36,14 @@ def generate(input_text, safety_settings, generation_config):
 
 
 def extract_fda_indications(inputList: pd.DataFrame, ) -> pd.DataFrame:
-
-
     #############################################
     ## GEMINI STUFF #############################
     #############################################
     generation_config = {
         "max_output_tokens": 8192,
-        "temperature": 1,
+        "temperature": 0,
         "top_p": 0.95,
     }
-
     safety_settings = [
         SafetySetting(
             category=SafetySetting.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
@@ -66,21 +62,19 @@ def extract_fda_indications(inputList: pd.DataFrame, ) -> pd.DataFrame:
             threshold=SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH
         ),
     ]
-
     indicationsData = list(inputList['indications'])
     activeIngredientsData = list(inputList['active ingredient'])
     print(len(indicationsData), ' indications sections found')
     #############################################
     ## MAIN SECTION #############################
     #############################################
-
     diseasesTreated = []
     therapyActiveIngredients = []
     originalText = []
     for index, item in tqdm(enumerate(indicationsData), total=(limit if testing else len(indicationsData))):
         if (testing and index < limit) or not testing:
             try:
-                input_text = "Produce a list of diseases treated in the following therapeutic indications list:\n" + item +  "Please format the list as [\'item1\', \'item2\', ... ,\'itemN\']. Do not include any other text in the response. If no diseases are treated, return an empty list as \'[]\'. If the therapy is preventative, add the tag (preventative) to the item. If the drug is only used for diagnostic purposes, return \'diagnostic/contrast/radiolabel\'."
+                input_text = f"Produce a list of diseases treated in the following therapeutic indications list:\n {item} \n Please format the list as: \'item1|item2|...|itemN\'. Do not include any other text in the response. If no diseases are treated, return \'None\'. If the drug is only used for diagnostic or procedural purposes, return \'non-therapeutic\'."
                 response = generate(input_text, safety_settings, generation_config)
                 diseasesTreated.append(response)
                 therapyActiveIngredients.append(activeIngredientsData[index])
