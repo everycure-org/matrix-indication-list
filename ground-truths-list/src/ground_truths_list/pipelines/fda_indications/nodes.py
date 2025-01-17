@@ -6,12 +6,10 @@ import pandas as pd
 from tqdm import tqdm
 from io import StringIO
 import requests
-
 import base64
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part, SafetySetting, FinishReason
 import vertexai.preview.generative_models as generative_models
-
 import os
 import xml.etree.ElementTree as ET
 import json
@@ -20,9 +18,8 @@ import os
 import string
 import re
 
-
 testing = True
-limit = 100
+limit = 5000
 
 def generate(input_text, safety_settings, generation_config):
         vertexai.init(project="mtrx-wg2-modeling-dev-9yj", location="us-east1")
@@ -64,7 +61,47 @@ def extract_active_ingredient(xml_file):
     for ingredient in root.findall(".//fda:activeMoiety/fda:name", ns):
         active_ingredients.append(ingredient.text)
     return active_ingredients
+
+def get_spl_section(filepath: str, section_code: str) -> str | None:
+    """
+    Extract text from an FDA Structured Product Label (SPL) XML file based on section code.
+    
+    Args:
+        filepath (str): Path to the SPL XML file
+        section_code (str): The SPL section code to search for
         
+    Returns:
+        str | None: The text content of the specified section if found, None otherwise
+        
+    Example:
+        text = get_spl_section("label.xml", "34066-1")  # Get CLINICAL STUDIES section
+    """
+    try:
+        # Parse the XML file
+        tree = ET.parse(filepath)
+        root = tree.getroot()
+        
+        # Define namespace mapping (SPL uses HL7 namespace)
+        ns = {'hl7': 'urn:hl7-org:v3'}
+        
+        # Search for section with matching code
+        xpath = f".//hl7:section[hl7:code[@code='{section_code}']]//hl7:text"
+        section = root.find(xpath, namespaces=ns)
+        
+        if section is not None:
+            # Extract and clean text content
+            text = ''.join(section.itertext()).strip()
+            return text
+        
+        return None
+        
+    except ET.ParseError as e:
+        raise ValueError(f"Failed to parse XML file: {e}")
+    except Exception as e:
+        raise Exception(f"Error processing SPL file: {e}")
+
+
+
 def getIndications(xmlfilepath):
     tree = ET.parse(xmlfilepath)
     root = tree.getroot()
@@ -85,26 +122,51 @@ def getIndications(xmlfilepath):
             text_elem = None    
     return None
 
-
-def getIndications(xmlfilepath):
-    tree = ET.parse(xmlfilepath)
-    root = tree.getroot()
-    ns = {'hl7': 'urn:hl7-org:v3'}
-    sections = root.findall('.//hl7:section', namespaces=ns)
-    for section in sections:
-        codeSection = section.find('.//hl7:code', namespaces=ns)
-        code = codeSection.get('code') if codeSection is not None else "no code"
-        if code == "34067-9":
-            text_elem = section.find('.//hl7:text', namespaces=ns)
-            try:
-                text_content = ''.join(text_elem.itertext()).strip()
-            except:
-                print('text_elem was empty')
-                return ""
-            return strip_spaces(text_content.strip(string.whitespace.replace(" ", "")))
-        else:
-            text_elem = None    
-    return None
+# def getIndications(spl_file_path: str) -> str:
+#     """
+#     Extract the content of section 34067-9 from an FDA SPL XML file.
+    
+#     Args:
+#         spl_file_path (str): Path to the SPL XML file
+        
+#     Returns:
+#         str: The text content of section 34067-9, or None if not found
+#     """
+#     try:
+#         # Parse the XML file
+#         tree = ET.parse(spl_file_path)
+#         root = tree.getroot()
+        
+#         # Define the namespace mapping
+#         # SPL files typically use these namespaces
+#         namespaces = {
+#             'v3': 'urn:hl7-org:v3',
+#             'xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+#         }
+        
+#         # Find the section with code 34067-9
+#         # Using xpath to find the section
+#         section_xpath = ".//v3:section[.//v3:code[@code='34067-9']]"
+#         section = root.find(section_xpath, namespaces)
+        
+#         if section is not None:
+#             # Extract all text content from the section
+#             text_elements = section.findall(".//v3:text", namespaces)
+#             content = []
+#             for text_elem in text_elements:
+#                 if text_elem.text:
+#                     content.append(text_elem.text.strip())
+            
+#             return "\n".join(content)
+#         else:
+#             return None
+            
+#     except ET.ParseError as e:
+#         #print(f"Error parsing XML file: {e}")
+#         return None
+#     except Exception as e:
+#         #print(f"An error occurred: {e}")
+#         return None
 
 def getPediatricConsiderations(xmlfilepath):
     indicationsNameTable = ['Indications','INDICATIONS', "INDICATIONS AND USAGE", "Indications and Usage", 'INDICATIONS ', 'Indications and usage', 'INDICATIONS:', 'INDICATIONS & USAGE', 'INDICATIONS AND USAGE:', 'INDICATIONS AND USAGE ', 'INDICATIONS AND USE', '1 INDICATIONS AND USAGE']
@@ -183,7 +245,7 @@ def mine_labels(dir: str) -> pd.DataFrame:
     return data
 
 
-def extract_fda_indications(inputList: pd.DataFrame, ) -> pd.DataFrame:
+def extract_fda_indications(inputList: pd.DataFrame, prompt: str) -> pd.DataFrame:
     #############################################
     ## GEMINI STUFF #############################
     #############################################
@@ -222,8 +284,8 @@ def extract_fda_indications(inputList: pd.DataFrame, ) -> pd.DataFrame:
     for index, item in tqdm(enumerate(indicationsData), total=(limit if testing else len(indicationsData))):
         if (testing and index < limit) or not testing:
             try:
-                input_text = f"Produce a list of diseases treated in the following therapeutic indications list:\n {item} \n Please format the list as: \'item1|item2|...|itemN\'. Do not include any other text in the response. If no diseases are treated, return \'None\'. If the drug is only used for diagnostic or procedural purposes, return \'non-therapeutic\'."
-                response = generate(input_text, safety_settings, generation_config)
+                #input_text = f"Produce a list of diseases treated in the following therapeutic indications list. Please format the list as: \'item1|item2|...|itemN\'. Do not include any other text in the response. If no diseases are treated, return \'None\'. If the drug is only used for diagnostic or procedural purposes, return \'non-therapeutic\'. START TEXT HERE:"
+                response = generate(prompt+item, safety_settings, generation_config)
                 diseasesTreated.append(response)
                 therapyActiveIngredients.append(activeIngredientsData[index])
                 originalText.append(item)
@@ -253,6 +315,24 @@ def getCurie_Drug(name):
     resolvedLabel = returned.label
     return resolvedName, resolvedLabel
 
+
+def preferRXCUI(curieList:list[str], labelList:list[str]) -> tuple:
+    """
+    Args: 
+        curieList (list[str]): list of Curie IDs
+        labelList (list[str]): list of labels for respective Curie IDs
+
+    Returns:
+        tuple: first Curie ID that is in RXCUI and associated label, or just first curie and label if no RXCUI.
+
+    """
+
+    for idx, item in enumerate(curieList):
+        if "RXCUI" in item:
+            return item, labelList[idx]
+    return curieList[0], labelList[0]  
+
+
 def build_string_from_list(list):
     outString = "["
     for item in list:
@@ -261,7 +341,6 @@ def build_string_from_list(list):
     return outString
 
 def build_list_fda(inputList: pd.DataFrame) -> pd.DataFrame:
-
     diseaseData = inputList
     diseaseLabelList = []
     diseaseIDList = []
@@ -272,8 +351,11 @@ def build_list_fda(inputList: pd.DataFrame) -> pd.DataFrame:
 
     nRows = len(list(diseaseData['diseases treated']))
 
-    labelDict = {}
-    idDict = {}
+    label_cache = {}
+    id_cache = {}
+
+    drug_id_cache = {}
+    drug_label_cache = {}
 
     for index, row in tqdm(diseaseData.iterrows(), total=len(diseaseData)):
         curr_row_diseasesTreated = row['diseases treated']
@@ -282,35 +364,54 @@ def build_list_fda(inputList: pd.DataFrame) -> pd.DataFrame:
             curr_row_drugsInTherapy = row['active ingredient(s)']
             curr_row_disease_ids = []
             curr_row_disease_id_labels = []
-            curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').split(',')
+            curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').split('|')
             #print("disease list: ", curr_row_diseaseList)
             
-            try:
-                drugCurie,drugLabel = getCurie_Drug(curr_row_drugsInTherapy)
-                drugID = drugCurie[0]
-                drugIDLabel = drugLabel[0]
-                    
-            except:
-                print("could not identify drug: ", curr_row_drugsInTherapy)
-                drugID = "NameRes Failed"
-                drugIDLabel = "NameRes Failed"
+            if curr_row_drugsInTherapy in drug_id_cache:
+                print("Drug cache hit")
+                drugID = drug_id_cache[curr_row_drugsInTherapy]
+                drugIDLabel = drug_label_cache[curr_row_drugsInTherapy]
+            else:
+                try:
+                    drugCurie,drugLabel = getCurie_Drug(curr_row_drugsInTherapy)
+                    drugID = drugCurie[0]
+                    drugIDLabel = drugLabel[0]
+                    drug_id_cache[curr_row_drugsInTherapy]=drugID
+                    drug_label_cache[curr_row_drugsInTherapy]=drugIDLabel
+                        
+                except:
+                    print("could not identify drug: ", curr_row_drugsInTherapy)
+                    drugID = "NameRes Failed"
+                    drugIDLabel = "NameRes Failed"
 
             for idx2,item in enumerate(curr_row_diseaseList):
-                item = item.strip().upper().replace(" \n","").replace(" (PREVENTATIVE)","")
-                curr_row_diseaseList[idx2] = item
-                #print(item)
-                try:
-                    #print(item)
-                    diseaseCurie,diseaseLabel = getCurie_Disease(item)
-                    diseaseIDList.append(diseaseCurie[0])
-                    diseaseLabelList.append(diseaseLabel[0])
-                    diseaseList.append(item)
-                    drugList.append(curr_row_drugsInTherapy)
-                    drugIDList.append(drugID)
-                    drugLabelList.append(drugIDLabel)
-                    
-                except:
-                    print("error during name resolving")
+                item = item.strip().upper().replace(" \n","").replace(" (PREVENTATIVE)","").replace("'","")
+                if item.upper() != "NONE" and item.upper!="LLM INGEST RETURNED ERROR" and item.upper!="NON-THERAPEUTIC":
+                    if item in id_cache:
+                        print("Cache Hit")
+                        diseaseList.append(item)
+                        diseaseIDList.append(id_cache[item])
+                        diseaseLabelList.append(label_cache[item])
+                        drugList.append(curr_row_drugsInTherapy)
+                        drugIDList.append(drugID)
+                        drugLabelList.append(drugIDLabel)
+                    else:
+                        curr_row_diseaseList[idx2] = item
+                        #print(item)
+                        try:
+                            #print(item)
+                            diseaseCurie,diseaseLabel = getCurie_Disease(item)
+                            diseaseIDList.append(diseaseCurie[0])
+                            diseaseLabelList.append(diseaseLabel[0])
+                            diseaseList.append(item)
+                            drugList.append(curr_row_drugsInTherapy)
+                            drugIDList.append(drugID)
+                            drugLabelList.append(drugIDLabel)
+                            id_cache[item]=diseaseCurie[0]
+                            label_cache[item]=diseaseLabel[0]
+
+                        except:
+                            print("error during name resolving")
 
     sheetData = pd.DataFrame(data=[diseaseIDList, diseaseLabelList, diseaseList, drugList, drugIDList, drugLabelList]).transpose()
     sheetData.columns = ['disease IDs', 'disease ID labels', 'list of diseases', 'active ingredients in therapy', 'drug ID', 'drug ID Label']

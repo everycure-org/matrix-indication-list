@@ -19,7 +19,10 @@ def create_pipeline(**kwargs) -> Pipeline:
 
         node(
             func = nodes.extract_fda_indications,
-            inputs = "dailymed_labels",
+            inputs =[
+                "dailymed_labels",
+                "params:structured_list_prompt"
+            ],
             outputs = "fda_structured_indications_list",
             name = "extract-named-diseases-fda"
         ),

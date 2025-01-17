@@ -1,4 +1,3 @@
-disease_lookup_name: 
 
-path_to_fda_labels: "/Volumes/MML/dailymed_labels/"
-
+path_to_fda_labels: /Volumes/MML/dailymed_labels/
+structured_list_prompt: "Produce a list of diseases treated in the following therapeutic indications text. Please format the list as: 'item1|item2|...|itemN'. Do not include any other text in the response. If no diseases are treated, return 'None'. If the drug is only used for imaging, diagnostic, allergy testing, or procedural purposes (e.g., Technetium), return 'non-therapeutic'. Do not infer any diseases - only list diseases directly included in the passage. If no text is provided, respond 'None'. START TEXT HERE:"
