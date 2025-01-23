@@ -18,8 +18,10 @@ import os
 import string
 import re
 
-testing = True
-limit = 5000
+testing = False
+limit = 1000
+
+
 
 def generate(input_text, safety_settings, generation_config):
         vertexai.init(project="mtrx-wg2-modeling-dev-9yj", location="us-east1")
@@ -281,11 +283,17 @@ def extract_fda_indications(inputList: pd.DataFrame, prompt: str) -> pd.DataFram
     diseasesTreated = []
     therapyActiveIngredients = []
     originalText = []
+    cache = {}
     for index, item in tqdm(enumerate(indicationsData), total=(limit if testing else len(indicationsData))):
         if (testing and index < limit) or not testing:
             try:
                 #input_text = f"Produce a list of diseases treated in the following therapeutic indications list. Please format the list as: \'item1|item2|...|itemN\'. Do not include any other text in the response. If no diseases are treated, return \'None\'. If the drug is only used for diagnostic or procedural purposes, return \'non-therapeutic\'. START TEXT HERE:"
-                response = generate(prompt+item, safety_settings, generation_config)
+                curr_prompt = prompt + item
+                if curr_prompt in cache:
+                    response = cache[curr_prompt]
+                else:
+                    response = generate(curr_prompt, safety_settings, generation_config)
+                    cache[curr_prompt] = response
                 diseasesTreated.append(response)
                 therapyActiveIngredients.append(activeIngredientsData[index])
                 originalText.append(item)
@@ -330,7 +338,7 @@ def preferRXCUI(curieList:list[str], labelList:list[str]) -> tuple:
     for idx, item in enumerate(curieList):
         if "RXCUI" in item:
             return item, labelList[idx]
-    return curieList[0], labelList[0]  
+    return curieList[0], labelList[0]
 
 
 def build_string_from_list(list):
