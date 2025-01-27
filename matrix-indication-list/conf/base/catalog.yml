@@ -1,0 +1,14 @@
+epar_table_4:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/EPAR_table_4.xlsx
+  load_args:
+    skiprows: [0,1,2,3,4,5,6,7]
+
+pmda_approvals:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pmda_approvals.csv
+
+dailymed_labels:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/dailymed_labels.xlsx
+

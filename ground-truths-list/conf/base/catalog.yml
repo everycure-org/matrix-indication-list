@@ -37,6 +37,23 @@ fda_indications_list_with_ids:
   type: pandas.ExcelDataset
   filepath: "data/02_intermediate/indications_fda.xlsx"
 
+fda_test_list_llm_qc_1:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/indications_fda_llm_qc_1.xlsx"
+
+fda_test_list_llm_qc_2:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/indications_fda_llm_qc_2.xlsx"
+
+fda_indications_list_with_llm_ids:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/indications_fda_llm_tags.xlsx"
+
+# FINAL LIST FOR JANE
+fda_test_list_llm_ID:
+  type: pandas.ExcelDataset
+  filepath: "data/02_intermediate/fda_test_llm_id_list.xlsx"
+
 merged_list:
   type: pandas.ExcelDataset
   filepath: data/02_intermediate/merged_list.xlsx

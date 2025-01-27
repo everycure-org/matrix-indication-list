@@ -1,0 +1,24 @@
+
+column_names:
+  - source_file_column: "source file"
+  - indications_text_column: "indications text"
+  - disease_list_column: "structured list"
+  - disease_name_column: "disease name"
+  - drug_name_column: "drug name"
+  - drug_id_column: "drug id nameres"
+  - disease_id_column: "disease id nameres"
+  - llm_true_false_column: "llm_nameres_correct"
+  - nameres_options__id_column: "nameres_id_options"
+  - nameres_options_label_column: "nameres_label_options"
+
+path_to_fda_labels: /Volumes/MML/dailymed_labels/
+
+structured_list_prompt: "Produce a list of diseases treated in the following therapeutic indications text. Please format the list as: 'item1|item2|...|itemN'. Do not include any other text in the response. If no diseases are treated, return 'None'. If the drug is only used for imaging, diagnostic, allergy testing, or procedural purposes (e.g., Technetium), return 'non-therapeutic'. Do not infer any diseases - only list diseases directly included in the passage. If no text is provided, respond 'None'. START TEXT HERE:"
+
+
+gemini_generation_config:
+  - max_output_tokens: 8192
+  - temperature: 0
+  - top_p: 0.95
+
+gemini_safety_setting: SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH

@@ -1,12 +1,5 @@
-"""
-This is a boilerplate pipeline 'fda_indications'
-generated using Kedro 0.19.9
-"""
-
 from kedro.pipeline import Pipeline, pipeline, node
-
 from . import nodes
-
 
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
@@ -33,5 +26,43 @@ def create_pipeline(**kwargs) -> Pipeline:
             outputs = "fda_indications_list_with_ids",
             name = "add-identifiers-fda"
         ),
+
+        node(
+            func= nodes.check_nameres_accuracy,
+            inputs=[
+                "fda_indications_list_with_ids",
+                "params:id_correct_incorrect_tag",
+            ],
+            outputs="fda_test_list_llm_qc_1",
+            name="check-nameres-accuracy",
+        ),
+
+        node(
+            func=nodes.add_llm_selected_best_ids,
+            inputs = [
+                "fda_test_list_llm_qc_1",
+                "params:llm_best_id_tag",
+            ],
+            outputs = "fda_test_list_llm_qc_2",
+            name = "llm-choose-best-id",
+        ),
+        # node(
+        #     func = nodes.enrich_list_llm_ids,
+        #     inputs = [
+        #         "fda_indications_list_with_ids",
+        #         "params:id_tagging_params",
+        #     ],
+        #     outputs = "fda_indications_list_with_llm_ids",
+        #     name = "add-llm-identifiers-fda",
+        # ),
+        node(
+            func= nodes.add_normalized_llm_tag_ids,
+            inputs=[
+                "fda_test_list_llm_qc_2",
+            ],
+            outputs="fda_test_list_llm_ID",
+            name="normalize-llm-ids",
+        ),
+
 
     ])

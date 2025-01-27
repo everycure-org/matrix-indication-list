@@ -10,9 +10,9 @@ def join_strings(series, delimiter=", "):
 
 
 def merge_lists(inputList_fda: pd.DataFrame, inputList_ema: pd.DataFrame, inputList_pmda: pd.DataFrame) -> pd.DataFrame:
-    fda_frame = inputList_fda#pd.read_excel("../dailymed_ingest/labels_to_diseases/diseases_to_IDs/indication-list-fda-v1.xlsx")
-    ema_frame = inputList_ema#pd.read_excel("../ema_indications_ingest/diseases_to_IDs/indication-list-ema-v1.xlsx")
-    pmda_frame = inputList_pmda#pd.read_excel("../pmda_indications_ingest/diseases_to_IDs/indication-list-pmda-v1.xlsx")
+    fda_frame = inputList_fda
+    ema_frame = inputList_ema
+    pmda_frame = inputList_pmda
 
     print(len(fda_frame), " items in fda frame")
     print(len(ema_frame), " items in ema frame")
@@ -26,7 +26,7 @@ def merge_lists(inputList_fda: pd.DataFrame, inputList_ema: pd.DataFrame, inputL
     print (df2)
     
     
-    agg_functions = {'disease ID labels': 'first', 'drug ID Label': 'first', 'drug ID': 'first', 'disease IDs': 'first', 'active ingredients in therapy':lambda x: list(x), 'list of diseases': lambda x: list(x)}
+    agg_functions = {'disease ID labels': 'first', 'drug ID Label': 'first', 'drug ID': 'first', 'disease IDs': 'first', 'active ingredients in therapy':lambda x: list(x), 'disease treated': lambda x: list(x)}
 
     df3 = df2.groupby(df2['drug|disease']).aggregate(agg_functions)
 
