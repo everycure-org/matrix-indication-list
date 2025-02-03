@@ -1,7 +1,3 @@
-"""
-This is a boilerplate pipeline 'fda_indications'
-generated using Kedro 0.19.9
-"""
 import pandas as pd
 from tqdm import tqdm
 from io import StringIO

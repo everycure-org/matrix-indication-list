@@ -16,3 +16,5 @@ matplotlib
 asyncio
 aiohttp
 openai
+ontobio
+networkx

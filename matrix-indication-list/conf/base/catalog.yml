@@ -1,14 +1,207 @@
+dailymed_raw:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/dailymed_labels.xlsx
+
+dailymed_1:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_1.xlsx
+
+dailymed_2:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_2.xlsx
+
+dailymed_3:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_3.xlsx
+
+dailymed_4:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_4.xlsx
+
+dailymed_5:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_5.xlsx
+
+dailymed_6:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_6.xlsx
+
+dailymed_7:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_7.xlsx
+
+dailymed_8:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_8.xlsx
+
+dailymed_9:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_9.xlsx
+
+dailymed_10:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/dailymed_10.xlsx
+
+dailymed_11:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/fda_indications.xlsx
+
+dailymed_12:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed/fda_indications_deduplicated.xlsx
+
+
+
+
+
+
+
+
+
+
+
+
 epar_table_4:
   type: pandas.ExcelDataset
   filepath: data/01_raw/EPAR_table_4.xlsx
   load_args:
     skiprows: [0,1,2,3,4,5,6,7]
 
+ema_preprocessed:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_preprocessed.xlsx
+
+ema_1:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_1.xlsx
+
+ema_2:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_2.xlsx
+
+ema_3:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_3.xlsx
+
+ema_4:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_4.xlsx
+
+ema_5:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_5.xlsx
+
+ema_6:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_6.xlsx
+
+ema_7:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_7.xlsx
+
+ema_8:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_8.xlsx
+
+ema_9:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_9.xlsx
+
+ema_10:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_10.xlsx
+
+ema_11:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_indications.xlsx
+
+ema_12:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/ema/ema_indications_deduplicated.xlsx
+
+
+
+
+
+
+
+
 pmda_approvals:
   type: pandas.CSVDataset
   filepath: data/01_raw/pmda_approvals.csv
 
-dailymed_labels:
+pmda_preprocessed:
   type: pandas.ExcelDataset
-  filepath: data/01_raw/dailymed_labels.xlsx
+  filepath: data/02_intermediate/pmda/pmda_preprocessed.xlsx
 
+pmda_1:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_1.xlsx
+
+pmda_2:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_2.xlsx
+
+pmda_3:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_3.xlsx
+
+pmda_4:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_4.xlsx
+
+pmda_5:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_5.xlsx
+
+pmda_6:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_6.xlsx
+
+pmda_7:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_7.xlsx
+
+pmda_8:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_8.xlsx
+
+pmda_9:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_9.xlsx
+
+pmda_10:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_10.xlsx
+
+pmda_11:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_indications.xlsx
+
+pmda_12:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/pmda/pmda_indications_deduplicated.xlsx
+
+
+
+
+matrix_indication_list:
+  type: pandas.ExcelDataset
+  filepath: data/03_primary/matrix_indication_list.xlsx
+
+
+mondo_edges:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/mondo_edges.tsv
+  load_args:
+    sep: "\t"
+  
+mondo_nodes:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/mondo_nodes.tsv
+  load_args:
+    sep: "\t"
+
+matrix_indication_list_downfilled:
+  type: pandas.ExcelDataset
+  filepath: data/03_primary/matrix_indication_list_downfilled.xlsx
