@@ -36,19 +36,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: downfill_mondo/indicationList.tsv # Replace with the path to your file
-          asset_name: indicationList.tsv            # Replace with the name you want for the uploaded asset
-          asset_content_type: application/octet-stream
-
-            # Step 3: Upload a file as a release asset
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: merge_contraindications_and_indications/ground-truths-list.tsv # Replace with the path to your file
-          asset_name: ground-truths-list.tsv            # Replace with the name you want for the uploaded asset
+          asset_path: matrix-indication-list/data/03_primary/matrix_indication_list.xlsx # Replace with the path to your file
+          asset_name: indicationList.xlsx              # Replace with the name you want for the uploaded asset
           asset_content_type: application/octet-stream
 
       # Step 3: Upload a file as a release asset
@@ -58,6 +47,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: contraindications/contraindications_to_diseases/diseaseList_to_ids/contraindication_list_filled.xlsx # Replace with the path to your file
-          asset_name: contraindicationList.xlsx # Replace with the name you want for the uploaded asset
+          asset_path: matrix-indication-list/data/03_primary/matrix_indication_list_downfilled.xlsx # Replace with the path to your file
+          asset_name: indicationList_downfilled.xlsx              # Replace with the name you want for the uploaded asset
+          asset_content_type: application/octet-stream
+
+            # Step 3: Upload a file as a release asset
+      # - name: Upload Release Asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: merge_contraindications_and_indications/ground-truths-list.tsv # Replace with the path to your file
+      #     asset_name: ground-truths-list.tsv            # Replace with the name you want for the uploaded asset
+      #     asset_content_type: application/octet-stream
+
+          
+
+      # Step 3: Upload a file as a release asset
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: matrix-indication-list/data/03_primary/contraindicationList.tsv # Replace with the path to your file
+          asset_name: contraindicationList.tsv # Replace with the name you want for the uploaded asset
           asset_content_type: application/octet-stream
