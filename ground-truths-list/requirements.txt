@@ -19,3 +19,4 @@ rdflib
 matplotlib
 asyncio
 aiohttp
+openai

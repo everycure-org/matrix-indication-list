@@ -1,1 +1,26 @@
-disease_lookup_name: 
+
+path_to_fda_labels: /Volumes/MML/dailymed_labels/
+structured_list_prompt: "Produce a list of diseases treated in the following therapeutic indications text. Please format the list as: 'item1|item2|...|itemN'. Do not include any other text in the response. If no diseases are treated, return 'None'. If the drug is only used for imaging, diagnostic, allergy testing, or procedural purposes (e.g., Technetium), return 'non-therapeutic'. Do not infer any diseases - only list diseases directly included in the passage. If no text is provided, respond 'None'. START TEXT HERE:"
+
+id_correct_incorrect_tag:
+  name_column: "disease treated"
+  output_column_name: "llm_nameres_correct"
+  model_params:
+    model: gpt-4o
+    prompt: "Are the following concepts similar enough that they could be considered the same disease? Return only TRUE or FALSE."
+    temperature: 0
+
+llm_best_id_tag:
+  output_column_name: "llm_best_id"
+  model_params:
+    model: gpt-4o
+    prompt: "Return ONLY the best ontological ID (e.g., 'MONDO:0000001') from the following to represent the provided biological concept. Do not include the label or item number. If no matches, return NONE."
+    temperature: 0
+
+id_tagging_params:
+  name_column: "disease treated"
+  output_column_name: "llm id"
+  model_params:
+    model: gpt-4o
+    prompt: "For the following disease concept, return ONLY the provided ID if it correctly represents the concept, or the appropriate MONDO ID if it does not correctly represent the concept."
+    temperature: 0

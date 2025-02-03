@@ -1,0 +1,75 @@
+
+column_names:
+  source_file_column: "source file"
+  indications_text_column: "indications text"
+  disease_list_column: "structured list"
+  disease_name_column: "disease name"
+  drug_name_column: "drug name"
+  drug_id_column: "drug id nameres"
+  drug_label_column: "drug label nameres"
+  disease_id_column: "disease id nameres"
+  disease_label_column: "disease label nameres"
+  llm_true_false_column_disease: "llm_nameres_correct"
+  nameres_options_id_column: "nameres id options disease"
+  nameres_options_label_column: "nameres label options disease"
+  llm_improved_id_column : "llm disease id"
+  llm_normalized_id_column_disease: "final normalized disease id"
+  llm_normalized_label_column_disease: "final normalized disease label"
+  llm_true_false_column_drug: "llm_nameres_correct_drug"
+  llm_improved_id_column_drug: "llm drug id"
+  llm_normalized_id_column_drug: "final normalized drug id"
+  llm_normalized_label_column_drug: "final normalized drug label"
+  deduplication_column: "drug|disease"
+  downfilled_true_false_column: "downfilled from mondo"
+
+biolink_type_disease: "DiseaseOrPhenotypicFeature"
+biolink_type_drug: "ChemicalOrDrugOrTreatment"
+
+path_to_fda_labels: /Volumes/MML/dailymed_labels/
+
+structured_list_prompt: "Produce a list of diseases treated in the following therapeutic indications text. Please format the list as: 'item1|item2|...|itemN'. Do not include any other text in the response. If no diseases are treated, return 'None'. If the drug is only used for imaging, diagnostic, allergy testing, or procedural purposes (e.g., Technetium), return 'non-therapeutic'. Do not infer any diseases - only list diseases directly included in the passage. If no text is provided, respond 'None'. START TEXT HERE:"
+
+gemini_generation_config:
+  - max_output_tokens: 8192
+  - temperature: 0
+  - top_p: 0.95
+
+gemini_safety_setting: SafetySetting.HarmBlockThreshold.BLOCK_ONLY_HIGH
+
+
+strings_to_clean_from_disease_list:
+  - "LLM EXTRACTION ERROR"
+  - "None "
+  - "None"
+  - ""
+  - "none"
+  - "ERROR"
+
+cleaning_regex_sub_pattern: "[^A-Za-z0-9 ]+"
+
+
+id_correct_incorrect_tag_disease:
+  model_params:
+    model: gpt-4o
+    prompt: "Are the following concepts similar enough that they could be considered the same disease? Return only TRUE or FALSE. Provide no explanation."
+    temperature: 0
+
+id_correct_incorrect_tag_drug:
+  model_params:
+    model: gpt-4o
+    prompt: "Are the following concepts similar enough that they could be considered the same drug? Return only TRUE or FALSE. Provide no explanation."
+    temperature: 0
+
+llm_best_id_tag:
+  output_column_name: "llm_best_id"
+  model_params:
+    model: gpt-4o
+    prompt: "Return ONLY the best ontological ID (e.g., 'MONDO:0000001') from the following to represent the provided biological concept. Do not include the label or item number. If no matches, return NONE."
+    temperature: 0
+
+llm_best_id_tag_drug:
+  output_column_name: "llm_best_id_drug"
+  model_params:
+    model: gpt-4o
+    prompt: "Return ONLY the best ontological ID (e.g., 'PUBCHEM:00000001') from the following to represent the provided drug concept. Do not include the label or item number. If no matches, return NONE."
+    temperature: 0

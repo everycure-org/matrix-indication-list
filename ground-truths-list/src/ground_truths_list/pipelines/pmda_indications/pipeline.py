@@ -12,7 +12,10 @@ def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
         node(
             func = nodes.extract_pmda_indications,
-            inputs = "pmda_approvals",
+            inputs = [
+                "pmda_approvals",
+                "params:structured_list_prompt"
+            ],
             outputs = "pmda_structured_indications_list",
             name = "extract-named-diseases-pmda"
         ),

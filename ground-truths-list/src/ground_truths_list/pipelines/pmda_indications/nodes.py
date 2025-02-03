@@ -38,10 +38,10 @@ def generate(input_text, safety_settings, generation_config):
     return resText
 
 
-def extract_pmda_indications(input_list: pd.DataFrame) -> pd.DataFrame:
+def extract_pmda_indications(input_list: pd.DataFrame, prompt: str) -> pd.DataFrame:
     generation_config = {
         "max_output_tokens": 8192,
-        "temperature": 1,
+        "temperature": 0,
         "top_p": 0.95,
     }
     safety_settings = [
@@ -138,9 +138,8 @@ def extract_pmda_indications(input_list: pd.DataFrame) -> pd.DataFrame:
                 drugsList.append(drugnames[index])
                 originalText.append(ind)
                 try:
-                    prompt = "Produce a list of diseases treated in the following therapeutic indications list: " + ind +".\n Please format the list as ['item1', 'item2', ... ,'itemN']. Do not inlude any other text in the response. If no diseases are treated, return an empty list as '[]'. If the therapy is preventative, add the tag (preventative) to the item. If the drug is only used for diagnostic purposes, return 'diagnostic/contrast/radiolabel'."
-                    response = generate(prompt, safety_settings, generation_config)
-                    #print(response)
+                    response = generate(prompt+ind, safety_settings, generation_config)
+                    print(response)
                     indicationDiseaseList.append(response.upper())
                 except:
                     print("LLM extraction failure")
@@ -195,7 +194,7 @@ def build_list_pmda(inputList: pd.DataFrame) -> pd.DataFrame:
             curr_row_drugsInTherapy = row['drug active ingredients']
             curr_row_disease_ids = []
             curr_row_disease_id_labels = []
-            curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').split(',')
+            curr_row_diseaseList = curr_row_diseasesTreated.replace("[","").replace("]","").replace('\'','').replace("'","").split('|')
             #print("disease list: ", curr_row_diseaseList)
             
             try:
