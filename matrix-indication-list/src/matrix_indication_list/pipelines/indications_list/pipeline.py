@@ -5,6 +5,195 @@ from . import nodes
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
 
+
+#########################################
+### FDA CONTRAINDICATIONS ###############
+#########################################
+        node(
+            func=nodes.mine_contraindications,
+            inputs = [
+               "params:path_to_fda_labels",
+            ],
+            outputs = "dailymed_contraindications_raw",
+            name = "mine-contraindications-fda",
+        ),
+        node(
+            func=nodes.extract_named_diseases,
+            inputs = [
+                "dailymed_contraindications_raw",
+                "params:column_names.contraindications_active_ingredients",
+                "params:column_names.contraindications_text_column",
+                "params:column_names.contraindications_structured_list_column",
+                "params:contraindications_structured_list_prompt",
+            ],
+            outputs = "dailymed_contraindications_1",
+            name = "extract-contraindications-lists-fda",
+        ),
+        node(
+            func=nodes.flatten_list,
+            inputs = [
+                "dailymed_contraindications_1",
+                "params:column_names.contraindications_structured_list_column",
+                "params:column_names.contraindications_active_ingredients",
+                "params:column_names.contraindications_text_column",
+                "params:column_names.new_contraindications_disease_name_column",
+            ],
+            outputs = "dailymed_contraindications_2",
+            name = "flatten-contraindications-list-fda"
+        ),
+
+        node(
+            func=nodes.clean_list,
+            inputs = [
+                "dailymed_contraindications_2",
+                "params:column_names.new_contraindications_disease_name_column",
+                "params:strings_to_clean_from_disease_list",
+                "params:cleaning_regex_sub_pattern"
+            ],
+            outputs = "dailymed_contraindications_3",
+            name = "clean-contraindications-list-fda"
+        ),
+        
+        node(
+            func=nodes.clean_list,
+            inputs = [
+                "dailymed_contraindications_3",
+                "params:column_names.contraindications_active_ingredients",
+                "params:strings_to_clean_from_disease_list",
+                "params:cleaning_regex_sub_pattern"
+            ],
+            outputs = "dailymed_contraindications_4",
+            name = "clean-contraindications-active-ingredients-fda"
+        ),
+        
+        node(
+            func=nodes.resolve_concepts,
+            inputs = [
+                "dailymed_contraindications_4",
+                "params:column_names.new_contraindications_disease_name_column",
+                "params:column_names.disease_id_column",
+                "params:column_names.disease_label_column",
+                "params:biolink_type_disease"
+            ],
+            outputs = "dailymed_contraindications_5",
+            name = "nameres-fda-contraindications-diseases"
+        ),
+
+         node(
+            func=nodes.check_nameres_llm,
+            inputs = [
+                "dailymed_contraindications_5",
+                "params:column_names.new_contraindications_disease_name_column",
+                "params:column_names.disease_label_column",
+                "params:id_correct_incorrect_tag_disease",
+                "params:column_names.llm_true_false_column_disease"
+            ],
+            outputs = "dailymed_contraindications_6",
+            name = "nameres-auto-qc-contraindications-disease"
+        ),
+        node(
+            func=nodes.llm_improve_ids,
+            inputs = [
+                "dailymed_contraindications_6",
+                "params:column_names.new_contraindications_disease_name_column",
+                "params:llm_best_id_tag",
+                "params:biolink_type_disease",
+                "params:column_names.disease_id_column",
+                "params:column_names.llm_true_false_column_disease",
+                "params:column_names.llm_improved_id_column",
+            ],
+            outputs = "dailymed_contraindications_7",
+            name = "llm-id-improvement-contraindications-diseases"
+        ),      
+        node(
+            func=nodes.resolve_concepts,
+            inputs = [
+                "dailymed_contraindications_7",
+                "params:column_names.contraindications_active_ingredients",
+                "params:column_names.drug_id_column",
+                "params:column_names.drug_label_column",
+                "params:biolink_type_drug"
+            ],
+            outputs = "dailymed_contraindications_8",
+            name = "nameres-fda-contraindications-drugs",
+        ),
+        node(
+            func=nodes.add_normalized_llm_tag_ids,
+            inputs= [
+                "dailymed_contraindications_8",
+                "params:column_names.llm_improved_id_column",
+                "params:column_names.llm_normalized_id_column_disease",
+                "params:column_names.llm_normalized_label_column_disease",
+            ],
+            outputs="dailymed_contraindications_9",
+            name = "normalize-diseases-fda-contraindications"
+        ),
+        node(
+            func=nodes.check_nameres_llm,
+            inputs = [
+                "dailymed_contraindications_9",
+                "params:column_names.contraindications_active_ingredients",
+                "params:column_names.drug_label_column",
+                "params:id_correct_incorrect_tag_drug",
+                "params:column_names.llm_true_false_column_drug"
+            ],
+            outputs = "dailymed_contraindications_10",
+            name = "nameres-auto-qc-drug-fda-contraindications"
+        ),
+
+        node(
+            func=nodes.llm_improve_ids,
+            inputs = [
+                "dailymed_contraindications_10",
+                "params:column_names.contraindications_active_ingredients",
+                "params:llm_best_id_tag_drug",
+                "params:biolink_type_drug",
+                "params:column_names.drug_id_column",
+                "params:column_names.llm_true_false_column_drug",
+                "params:column_names.llm_improved_id_column_drug",
+            ],
+            outputs = "dailymed_contraindications_11",
+            name = "llm-id-improvement-drug-fda-contraindications"
+        ),
+
+        node(
+            func=nodes.add_normalized_llm_tag_ids,
+            inputs= [
+                "dailymed_contraindications_11",
+                "params:column_names.llm_improved_id_column_drug",
+                "params:column_names.llm_normalized_id_column_drug",
+                "params:column_names.llm_normalized_label_column_drug",
+            ],
+            outputs="dailymed_contraindications_12",
+            name = "normalize-drug-contraindications-fda",
+        ),
+
+        node(
+            func=nodes.deduplicate_entities,
+            inputs=[
+                "dailymed_contraindications_12",
+                "params:column_names.llm_normalized_id_column_drug",
+                "params:column_names.llm_normalized_id_column_disease",
+                "params:column_names.deduplication_column",
+            ],
+            outputs="dailymed_contraindications_13",
+            name="deduplicate-fda-contraindications"
+        ),
+
+        node(
+            func=nodes.downfill_list_mondo,
+            inputs=[
+                "dailymed_contraindications_13",
+                "mondo_edges",
+                "mondo_nodes",
+                "params:column_names",
+            ],
+            outputs="matrix_contraindications_list_downfilled",
+            name="downfill-list-contraindications"
+        ),
+
+
+
 #########################################
 ######## FDA LIST #######################
 #########################################
@@ -12,18 +201,22 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.extract_named_diseases,
             inputs = [
                 "dailymed_raw",
-                "params:column_names",
+                "params:column_names.drug_name_column",
+                "params:column_names.indications_text_column",
+                "params:column_names.disease_list_column",
                 "params:structured_list_prompt",
             ],
             outputs = "dailymed_1",
             name = "extract-disease-lists-fda"
         ),
-
         node(
             func=nodes.flatten_list,
             inputs = [
                 "dailymed_1",
-                "params:column_names",
+                "params:column_names.disease_list_column",
+                "params:column_names.drug_name_column",
+                "params:column_names.indications_text_column",
+                "params:column_names.disease_name_column",
             ],
             outputs = "dailymed_2",
             name = "flatten-list-fda"
@@ -33,7 +226,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.clean_list,
             inputs = [
                 "dailymed_2",
-                "params:column_names",
+                "params:column_names.disease_name_column",
                 "params:strings_to_clean_from_disease_list",
                 "params:cleaning_regex_sub_pattern"
             ],
@@ -182,7 +375,9 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.extract_named_diseases,
             inputs = [
                 "ema_preprocessed",
-                "params:column_names",
+                "params:column_names.drug_name_column",
+                "params:column_names.indications_text_column",
+                "params:column_names.disease_list_column",
                 "params:structured_list_prompt",
             ],
             outputs = "ema_1",
@@ -193,7 +388,10 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.flatten_list,
             inputs = [
                 "ema_1",
-                "params:column_names",
+                "params:column_names.disease_list_column",
+                "params:column_names.drug_name_column",
+                "params:column_names.indications_text_column",
+                "params:column_names.disease_name_column",
             ],
             outputs = "ema_2",
             name = "flatten-list-ema"
@@ -203,7 +401,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.clean_list,
             inputs = [
                 "ema_2",
-                "params:column_names",
+                "params:column_names.disease_name_column",
                 "params:strings_to_clean_from_disease_list",
                 "params:cleaning_regex_sub_pattern"
             ],
@@ -353,7 +551,9 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.extract_named_diseases,
             inputs = [
                 "pmda_preprocessed",
-                "params:column_names",
+                "params:column_names.drug_name_column",
+                "params:column_names.indications_text_column",
+                "params:column_names.disease_list_column",
                 "params:structured_list_prompt",
             ],
             outputs = "pmda_1",
@@ -364,7 +564,10 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.flatten_list,
             inputs = [
                 "pmda_1",
-                "params:column_names",
+                "params:column_names.disease_list_column",
+                "params:column_names.drug_name_column",
+                "params:column_names.indications_text_column",
+                "params:column_names.disease_name_column",
             ],
             outputs = "pmda_2",
             name = "flatten-list-pmda"
@@ -374,7 +577,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             func=nodes.clean_list,
             inputs = [
                 "pmda_2",
-                "params:column_names",
+                "params:column_names.disease_name_column",
                 "params:strings_to_clean_from_disease_list",
                 "params:cleaning_regex_sub_pattern"
             ],

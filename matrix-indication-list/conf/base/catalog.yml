@@ -1,3 +1,66 @@
+
+# FDA INDICATIONS
+dailymed_contraindications_raw:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/dailymed_contraindications_sections.xlsx
+
+dailymed_contraindications_1:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_1.xlsx
+
+dailymed_contraindications_2:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_2.xlsx
+
+dailymed_contraindications_3:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_3.xlsx
+
+dailymed_contraindications_4:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_4.xlsx
+
+dailymed_contraindications_5:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_5.xlsx
+
+dailymed_contraindications_6:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_6.xlsx
+
+dailymed_contraindications_7:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_7.xlsx
+
+dailymed_contraindications_8:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_8.xlsx
+
+dailymed_contraindications_9:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_9.xlsx
+
+dailymed_contraindications_10:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_10.xlsx
+
+dailymed_contraindications_11:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_11.xlsx
+
+dailymed_contraindications_12:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_12.xlsx
+dailymed_contraindications_13:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_13.xlsx
+
+matrix_contraindications_list_downfilled:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/dailymed_contraindications/matrix_contraindications_list_downfilled.xlsx
+
+
+# FDA INDICATIONS
 dailymed_raw:
   type: pandas.ExcelDataset
   filepath: data/01_raw/dailymed_labels.xlsx

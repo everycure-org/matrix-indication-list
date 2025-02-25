@@ -3,6 +3,8 @@ from . import nodes
 
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
+
+        # INDICATIONS
         node(
             func = nodes.mine_labels,
             inputs = "params:path_to_fda_labels",
@@ -10,6 +12,8 @@ def create_pipeline(**kwargs) -> Pipeline:
             name = "mine-dailymed-labels",
         ),
 
+
+        # FDA INDICATIONS
         node(
             func = nodes.extract_fda_indications,
             inputs =[

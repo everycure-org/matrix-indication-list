@@ -56,10 +56,179 @@ generation_config = {
 testing = False
 
 # ID Limit, if testing
-limit = 100
+limit = 1000
 
 # SOURCE BEGINS HERE
 
+
+################################
+### EXTRACTION #################
+################################
+def extract_contraindications(xml_file_path):
+    """
+    Extract contraindications from a Structured Product Label XML file.
+    
+    Args:
+        xml_file_path (str): Path to the SPL XML file
+        
+    Returns:
+        dict: Dictionary containing contraindications text and metadata
+    """
+    # Define the namespace used in SPL files
+    namespaces = {
+        'v3': 'urn:hl7-org:v3',
+        'xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+    }
+    
+    try:
+        # Parse the XML file
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
+        
+        # Initialize results dictionary
+        results = {
+            'contraindications': None,
+            'section_code': None,
+            'section_id': None,
+            'metadata': {}
+        }
+        
+        # Find the contraindications section
+        # SPL uses code 34070-3 for contraindications
+        for section in root.findall('.//v3:section', namespaces):
+            code_element = section.find('.//v3:code', namespaces)
+            if code_element is not None:
+                code = code_element.get('code')
+                if code == '34070-3':  # LOINC code for contraindications
+                    # Extract section ID if present
+                    results['section_id'] = section.get('ID', '')
+                    
+                    # Extract section code details
+                    results['section_code'] = {
+                        'code': code,
+                        'codeSystem': code_element.get('codeSystem', ''),
+                        'displayName': code_element.get('displayName', '')
+                    }
+                    
+                    # Extract the text content
+                    text_element = section.find('.//v3:text', namespaces)
+                    if text_element is not None:
+                        # Convert the text element to string, preserving internal markup
+                        text_content = ET.tostring(text_element, encoding='unicode', method='xml')
+                        
+                        # Clean up the text content
+                        # Remove XML tags while preserving content
+                        clean_text = re.sub(r'<[^>]+>', ' ', text_content)
+                        # Remove extra whitespace
+                        clean_text = ' '.join(clean_text.split())
+                        
+                        results['contraindications'] = clean_text
+                    
+                    # Extract any additional metadata
+                    title_element = section.find('.//v3:title', namespaces)
+                    if title_element is not None:
+                        results['metadata']['title'] = title_element.text
+                    
+                    break  # Stop after finding the contraindications section
+        
+        return results
+    
+    except ET.ParseError as e:
+        raise Exception(f"Error parsing XML file: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Error processing SPL file: {str(e)}")
+
+def unzip_file(zip_path, extract_to_folder):
+    if not os.path.isfile(zip_path):
+        raise FileNotFoundError(f"The file {zip_path} does not exist.")
+    os.makedirs(extract_to_folder, exist_ok=True) 
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to_folder)
+       #print(f"Extracted all contents to {extract_to_folder}")
+
+def extract_active_ingredient(xml_file):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    ns = {'fda': 'urn:hl7-org:v3'}
+    active_ingredients = []
+    for ingredient in root.findall(".//fda:activeMoiety/fda:name", ns):
+        active_ingredients.append(ingredient.text)
+    return active_ingredients
+
+def getIndications(xmlfilepath):
+    tree = ET.parse(xmlfilepath)
+    root = tree.getroot()
+    ns = {'hl7': 'urn:hl7-org:v3'}
+    sections = root.findall('.//hl7:section', namespaces=ns)
+    for section in sections:
+        codeSection = section.find('.//hl7:code', namespaces=ns)
+        code = codeSection.get('code') if codeSection is not None else "no code"
+        if code == "34067-9":
+            text_elem = section.find('.//hl7:text', namespaces=ns)
+            try:
+                text_content = ''.join(text_elem.itertext()).strip()
+            except:
+                print('text_elem was empty')
+                return ""
+            return strip_spaces(text_content.strip(string.whitespace.replace(" ", "")))
+        else:
+            text_elem = None    
+    return None
+
+def strip_spaces(myString):
+    _RE_COMBINE_WHITESPACE = re.compile(r"(?a:\s+)")
+    _RE_STRIP_WHITESPACE = re.compile(r"(?a:^\s+|\s+$)")
+    myString = _RE_COMBINE_WHITESPACE.sub(" ", myString)
+    myString = _RE_STRIP_WHITESPACE.sub("", myString)
+    return myString
+
+def mine_contraindications(dir: str) -> pd.DataFrame:
+    contraindications_list = []
+    ingredients_list = []
+    counts = 0
+    foundCounts = 0
+    notFoundCounts = 0
+    dirs = []
+    # TODO: automatically find, download, unzip all of the dailymed folders
+    labelFolders = ["prescription_1/", "prescription_2/", "prescription_3/", "prescription_4/", "prescription_5/"]
+    
+    for label in labelFolders:
+        dirs.append(dir+label)
+
+    for directory in (dirs):
+        for files in tqdm(os.listdir(directory), desc=f"reading directory {directory}"):
+            if files.endswith(".zip"):
+                fpath = directory + files
+                fileRoot = files.replace(".zip","")
+                dest = directory + fileRoot
+                try:
+                    unzip_file(fpath,dest)
+                except:
+                    #print("failed to unzip file ", fpath)
+                    continue
+                xmlfile=""
+                for contents in os.listdir(dest):
+                    if contents.endswith(".xml"):
+                        xmlfile=contents.replace("._","")
+                xmlfilepath = dest+"/"+xmlfile
+                contraindications = extract_contraindications(xmlfilepath)
+                active_ingredients = extract_active_ingredient(xmlfilepath)
+                for ind, item in enumerate(active_ingredients):
+                    active_ingredients[ind]=item.upper()
+                ingredients_list.append(set(active_ingredients))
+                if contraindications is not None:
+                    contraindications_list.append(contraindications['contraindications'])
+                    foundCounts += 1
+                    #print(foundCounts, " indications successfully found so far")
+                else:
+                    notFoundCounts += 1
+                    #print(notFoundCounts, " indications not found so far, failed to find for ", files)
+                    contraindications_list.append("")
+                counts +=1
+        
+    print("finished ingesting indications")
+    data = pd.DataFrame({'active ingredient':ingredients_list, 'contraindications':contraindications_list})
+    return data
 
 #################################
 ### STANDARDIZATION #############
@@ -122,61 +291,60 @@ def clean_empty_rows(inList, column_name) -> pd.DataFrame:
     inList.drop(indices_to_drop, inplace=True)
     return inList
 
-def extract_named_diseases(inList:pd.DataFrame, column_names: dict, structured_list_prompt: str) -> pd.DataFrame:
+def extract_named_diseases(inList:pd.DataFrame, drug_names_column:str, passage_column:str, structured_list_column:str, structured_list_prompt: str) -> pd.DataFrame:
     if testing:
         print("TESTING!")
 
-    inList = clean_empty_rows(inList, column_names.get("indications_text_column"))
+    inList = clean_empty_rows(inList, passage_column)
     # New Fields to Add
-    diseases_treated = []
-    print(column_names)
+    diseases_mentioned = []
     # Fetch Columns
-    indications_data = list(inList[column_names.get("indications_text_column")])
-    active_ingredients_data = list(inList[column_names.get("drug_name_column")])
+    indications_data = list(inList[passage_column])
+    active_ingredients_data = list(inList[drug_names_column])
     for index, item in tqdm(enumerate(indications_data), total=(limit if testing else len(indications_data))):
         if  (index < limit) or not testing:
             try:
                 prompt = structured_list_prompt + item
-                diseases_treated.append(generate(prompt))
+                diseases_mentioned.append(generate(prompt))
             except Exception as e:
                 print(e)
-                diseases_treated.append("LLM EXTRACTION ERROR")
+                diseases_mentioned.append("LLM EXTRACTION ERROR")
 
     if testing:
         inList = inList.head(limit)
-    inList[column_names.get("disease_list_column")]=diseases_treated
+    inList[structured_list_column]=diseases_mentioned
 
 
     return inList
 
-def flatten_list (inList: pd.DataFrame, column_names:dict) -> pd.DataFrame:
+def flatten_list (inList: pd.DataFrame, disease_list_column: str, drug_name_column:str, passage_text_column:str, disease_name_column:str) -> pd.DataFrame:
     drug_names_new = []
     indications_text_new = []
     structured_lists_new = []
     disease_names_new = []
 
     for idx, row in tqdm(inList.iterrows(), total=len(inList), desc="flattening list"):
-        disease_list_curr = row[column_names.get("disease_list_column")]
+        disease_list_curr = row[disease_list_column]
         if type(disease_list_curr) != float and disease_list_curr!="LLM EXTRACTION ERROR" and disease_list_curr.strip()!="None":
             indications_list = disease_list_curr.split("|")
             for item in indications_list:
-                drug_names_new.append(row[column_names.get("drug_name_column")])
-                indications_text_new.append(row[column_names.get("indications_text_column")])
-                structured_lists_new.append(row[column_names.get("disease_list_column")])
+                drug_names_new.append(row[drug_name_column])
+                indications_text_new.append(row[passage_text_column])
+                structured_lists_new.append(row[disease_list_column])
                 disease_names_new.append(item)
 
     data = {
-        column_names.get("drug_name_column") : drug_names_new,
-        column_names.get("indications_text_column") : indications_text_new,
-        column_names.get("disease_name_column") : disease_names_new,
+        drug_name_column : drug_names_new,
+        passage_text_column : indications_text_new,
+        disease_name_column : disease_names_new,
     }
     
     return pd.DataFrame(data)
 
-def clean_list (inList: pd.DataFrame, column_names: dict, problem_strings:list[str], regex_sub_pattern: str):
+def clean_list (inList: pd.DataFrame, disease_name_column:str, problem_strings:list[str], regex_sub_pattern: str):
     indices_to_drop = []
     for idx, row in tqdm(inList.iterrows(), total=len(inList), desc="removing problematic entries..."):
-        diseaseCol = column_names.get("disease_name_column")
+        diseaseCol = disease_name_column
         disease_name = row[diseaseCol]
         if disease_name in problem_strings or type(disease_name) == float:
             indices_to_drop.append(idx)
@@ -298,13 +466,13 @@ def choose_best_id (concept: str, ids: list[str], labels: list[str], params: dic
     return output.choices[0].message.content
 
 def llm_improve_ids(inList: pd.DataFrame, concept_column_name: str, params: dict, biolink_type: str, first_attempt_column_name: str, llm_decision_column: str, new_best_id_column: str ):
-    
     print("Improving IDs with LLM best-choice selection")
     new_ids = []
     cache = {}
     for idx, row in tqdm(inList.iterrows(), total=len(inList), desc="Using LLM to choose best of top 30 nameres hits for each flagged entry"):
         concept = row[concept_column_name]
-        if row[llm_decision_column] == "TRUE":
+        llm_decision = row[llm_decision_column]
+        if llm_decision == True or (type(llm_decision)==str and llm_decision.upper()=="TRUE"):
             new_ids.append(row[first_attempt_column_name])
         else:
             if concept in cache:
@@ -371,19 +539,15 @@ def add_normalized_llm_tag_ids(inList: pd.DataFrame, in_column: str, out_column_
         inList[out_column_label] = labels_out
     except Exception as e:
         print(e)
-    
     return clean_bad_entries(inList, out_column_id, "ERROR")
-
 
 def deduplicate_entities(inList: pd.DataFrame, drug_id_column: str, disease_id_column: str, deduplication_column: str) -> pd.DataFrame:
     drug_to_disease = []
     for idx, row in tqdm(inList.iterrows(), total=len(inList), desc="creating merge string for each entry"):
         drug_to_disease.append("|".join([row[drug_id_column], row[disease_id_column]]))
     inList[deduplication_column]=drug_to_disease
-    inList.drop_duplicates(subset=deduplication_column, keep='first')
-    return inList
-
-
+    clean_list = inList.drop_duplicates(subset=deduplication_column, keep='first')
+    return clean_list
 
 def join_lists(fda_list: pd.DataFrame, ema_list: pd.DataFrame, pmda_list: pd.DataFrame, column_names:dict) -> pd.DataFrame:
     fda_list_to_merge = pd.DataFrame(data={ 
@@ -413,7 +577,6 @@ def join_lists(fda_list: pd.DataFrame, ema_list: pd.DataFrame, pmda_list: pd.Dat
 
 
 ## MONDO DOWNFILL
-
 def get_edges(graph, name):
     return(graph.edges([name]))
 
@@ -443,16 +606,6 @@ def downfill(graph: nx.DiGraph, drug_id: str, drug_label:str, disease_id: str, d
             column_names.get("downfilled_true_false_column"):True
         })
         curr.loc[len(curr)] = new_row
-        #curr = pd.concat([curr, pd.DataFrame([new_row])], ignore_index=True)
-        #print(curr.tail)
-        # curr.loc[len(curr)] = [drug + "|" + disease, 
-        #                             mondoNodes[mondoNodes.id==disease]['name'].to_string(index=False), 
-        #                             drugInfo['drug ID Label'],
-        #                             drug, 
-        #                             disease, 
-        #                             drugInfo['active ingredients in therapy'], 
-        #                             inheritanceString,
-        #                             True] 
     except Exception as e:
         print(e)
 
@@ -497,7 +650,6 @@ def downfill_list_mondo(inList: pd.DataFrame, mondo_edges: pd.DataFrame, mondo_n
                 downfill(G, row[column_names.get("llm_normalized_id_column_drug")], row[column_names.get("llm_normalized_label_column_drug")], new_disease, disease_nodes[disease_nodes.id==new_disease]['name'].to_string(index=False), inList, disease_nodes, cache, column_names)
 
     clean_df = inList.drop_duplicates(subset=[column_names.get("deduplication_column")])
-
     return clean_df
 
 
