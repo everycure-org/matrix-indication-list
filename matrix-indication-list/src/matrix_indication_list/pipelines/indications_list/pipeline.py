@@ -181,9 +181,32 @@ def create_pipeline(**kwargs) -> Pipeline:
         ),
 
         node(
+            func=nodes.apply_llm_labels,
+            inputs = [
+                "dailymed_contraindications_13",
+                "params:column_names.contraindications_active_ingredients",
+                "params:is_allergen_prompt",
+                "params:column_names.is_allergen_column"
+            ],
+            outputs = "dailymed_contraindications_14",
+            name = "is_allergen_contra_fda",
+        ),
+        node(
+            func=nodes.apply_llm_labels,
+            inputs = [
+                "dailymed_contraindications_14",
+                "params:column_names.contraindications_active_ingredients",
+                "params:is_radiolabel_prompt",
+                "params:column_names.is_diagnostic_column"
+            ],
+            outputs = "dailymed_contraindications_15",
+            name = "is_diagnostic_contra_fda",
+        ),
+
+        node(
             func=nodes.downfill_list_mondo,
             inputs=[
-                "dailymed_contraindications_13",
+                "dailymed_contraindications_15",
                 "mondo_edges",
                 "mondo_nodes",
                 "params:column_names",
@@ -726,5 +749,15 @@ def create_pipeline(**kwargs) -> Pipeline:
             outputs="matrix_indication_list_downfilled",
             name="downfill-list"
         ),
+        node(
+            func=nodes.assess_disease_list_coverage,
+            inputs=[
+                "disease_list",
+                "matrix_indication_list_downfilled",
+            ],
+            outputs="None",
+            name="assess-coverage"
 
+
+        )
     ])

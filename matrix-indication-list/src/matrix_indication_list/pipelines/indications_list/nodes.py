@@ -268,7 +268,7 @@ def standardize_pmda_rows(inList: pd.DataFrame, column_names:dict) -> pd.DataFra
 def generate(input_text):
         vertexai.init(project="mtrx-wg2-modeling-dev-9yj", location="us-east1")
         model = GenerativeModel(
-            "gemini-1.5-flash-001",
+            "gemini-2.0-flash",
         )
         responses = model.generate_content(
         [input_text],
@@ -315,6 +315,23 @@ def extract_named_diseases(inList:pd.DataFrame, drug_names_column:str, passage_c
     inList[structured_list_column]=diseases_mentioned
 
 
+    return inList
+
+def apply_llm_labels(inList: pd.DataFrame, names_column: str, base_prompt: str, out_column: str) -> pd.DataFrame:
+    active_ingredients_data = list(inList[names_column])
+    llm_labels = []
+    for index, item in tqdm(enumerate(active_ingredients_data), total=len(inList)):
+        if index < limit or not testing:
+            try:
+                prompt = base_prompt + item
+                llm_labels.append(generate(prompt))
+            except Exception as e:
+                print(e)
+                llm_labels.append("LLM_EXTRACTION_ERROR")
+
+    if testing:
+        inList = inList.head(limit)
+    inList[out_column] = llm_labels
     return inList
 
 def flatten_list (inList: pd.DataFrame, disease_list_column: str, drug_name_column:str, passage_text_column:str, disease_name_column:str) -> pd.DataFrame:
@@ -653,25 +670,14 @@ def downfill_list_mondo(inList: pd.DataFrame, mondo_edges: pd.DataFrame, mondo_n
     return clean_df
 
 
+def assess_disease_list_coverage (disease_list: pd.DataFrame, indication_list: pd.DataFrame):
+    diseases_treated = set(list(indication_list['final normalized disease id']))
+    disease_list_set = set(list(disease_list['category_class']))
 
+    disease_list_coverage = disease_list_set.difference(diseases_treated)
 
-# def downfill_list_mondo(inList:pd.DataFrame, column_names:dict) -> pd.DataFrame:
-#     #print("Building mondo ontology...")
-#     #mondo = pronto.Ontology('http://purl.obolibrary.org/obo/mondo.owl')
-#     print("Built mondo ontology.")
-#     for idx, row in tqdm(inList.iterrows(), total=len(inList), desc="downfilling from MONDO entries..."):
-#         disease_id = row[column_names.get("llm_normalized_id_column_disease")]
-#         if "MONDO" in disease_id:
-#             children = get_mondo_children_pronto(disease_id, mondo)
-#             for child in children:
-#                 print(child.id)
-#                 new_row = {
-#                     column_names.get("llm_normalized_id_column_drug"):row[column_names.get("llm_normalized_id_column_drug")],
-#                     column_names.get("llm_normalized_label_column_drug"):row[column_names.get("llm_normalized_label_column_drug")],
-#                     column_names.get("llm_normalized_id_column_disease"):child.id,
-#                     column_names.get("llm_normalized_label_column_disease"):row[column_names.get("llm_normalized_label_column_disease")],
-#                     column_names.get("deduplication_column"):row[column_names.get("deduplication_column")],
-#                     }
-#                 inList.append(new_row, ignore_index=True)
+    print(f"{len(disease_list_coverage)} not covered in indications list")
+    return None
+    
 
         
