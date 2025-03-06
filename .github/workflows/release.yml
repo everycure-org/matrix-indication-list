@@ -29,7 +29,7 @@ jobs:
           draft: false
           prerelease: false
 
-      # Step 3: Upload a file as a release asset
+      # INDICATION LIST
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -40,7 +40,7 @@ jobs:
           asset_name: indicationList.xlsx              # Replace with the name you want for the uploaded asset
           asset_content_type: application/octet-stream
 
-      # Step 3: Upload a file as a release asset
+      # INDICATION LIST DOWNFILLED
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -51,26 +51,24 @@ jobs:
           asset_name: indicationList_downfilled.xlsx              # Replace with the name you want for the uploaded asset
           asset_content_type: application/octet-stream
 
-            # Step 3: Upload a file as a release asset
-      # - name: Upload Release Asset
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: merge_contraindications_and_indications/ground-truths-list.tsv # Replace with the path to your file
-      #     asset_name: ground-truths-list.tsv            # Replace with the name you want for the uploaded asset
-      #     asset_content_type: application/octet-stream
-
-          
-
-      # Step 3: Upload a file as a release asset
+      # CONTRAINDICATION LIST
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: matrix-indication-list/data/03_primary/contraindicationList.tsv # Replace with the path to your file
-          asset_name: contraindicationList.tsv # Replace with the name you want for the uploaded asset
+          asset_path: matrix-indication-list/data/03_primary/matrix_contraindication_list.xlsx # Replace with the path to your file
+          asset_name: contraindicationList.xlsx              # Replace with the name you want for the uploaded asset
+          asset_content_type: application/octet-stream
+
+      # CONTRAINDICATION LIST DOWNFILLED
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: matrix-indication-list/data/03_primary/matrix_contraindication_list_downfilled.xlsx # Replace with the path to your file
+          asset_name: contraindicationList_downfilled.xlsx              # Replace with the name you want for the uploaded asset
           asset_content_type: application/octet-stream
