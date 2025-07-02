@@ -1,6 +1,6 @@
 from kedro.pipeline import Pipeline, pipeline, node
-from . import nodes
-
+from . import nodes, compare_medi_robokop
+from . import mine_indications
 
 def create_pipeline(**kwargs) -> Pipeline:
     return pipeline([
@@ -220,6 +220,18 @@ def create_pipeline(**kwargs) -> Pipeline:
 #########################################
 ######## FDA LIST #######################
 #########################################
+        node(
+            func = mine_indications.mine_indications,
+            inputs = "params:path_to_fda_labels",
+            outputs = "dailymed_raw",
+            name = "mine-indications" 
+        ),
+        node(
+            func = mine_indications.mine_usage,
+            inputs = "params:path_to_fda_labels",
+            outputs = "dailymed_usage_raw",
+            name = "mine-usage" 
+        ),
         node(
             func=nodes.extract_named_diseases,
             inputs = [
@@ -757,7 +769,31 @@ def create_pipeline(**kwargs) -> Pipeline:
             ],
             outputs="None",
             name="assess-coverage"
+        ),
+        node(
+            func=compare_medi_robokop.add_unique_dd_edges_rk,
+            inputs="robokop_treats_edges",
+            outputs="rk_treats_edges_piped",
+            name="build_piped_edges"
+        ),
+        node(
+            func=compare_medi_robokop.compare_medi_robokop,
+            inputs=[
+                "matrix_indication_list",
+                "rk_treats_edges_piped",
+            ],
+            outputs="new_coverage_robokop",
+            name="compare-medi-robokop"
+        ),
+        node(
+            func=nodes.compare_robokop_rtx_medi,
+            inputs=[
+                "robokop_indications",
+                "rtx_indications",
+                "matrix_indication_list",
+            ],
+            outputs="comparison_statistics",
+            name="compare-indications-lists"
+            )
 
-
-        )
     ])

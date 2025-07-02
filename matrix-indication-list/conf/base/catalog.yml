@@ -59,16 +59,20 @@ dailymed_contraindications_14:
   filepath: data/02_intermediate/dailymed_contraindications/dailymed_contraindications_14.xlsx
 dailymed_contraindications_15:
   type: pandas.ExcelDataset
-  filepath: data/03_primary/matrix_contraindications.xlsx
+  filepath: data/03_primary/matrix_contraindication_list.xlsx
 matrix_contraindications_list_downfilled:
   type: pandas.ExcelDataset
-  filepath: data/03_primary/matrix_contraindications_list_downfilled.xlsx
+  filepath: data/03_primary/matrix_contraindication_list_downfilled.xlsx
 
 
 # FDA INDICATIONS
 dailymed_raw:
   type: pandas.ExcelDataset
   filepath: data/01_raw/dailymed_labels.xlsx
+
+dailymed_usage_raw:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/dailymed_labels_usage.xlsx
 
 dailymed_1:
   type: pandas.ExcelDataset
@@ -283,4 +287,33 @@ disease_list:
   type: pandas.CSVDataset
   filepath: data/04_feature/matrix-disease-list-unfiltered.tsv
   load_args:
+    sep: "\t"
+
+
+robokop_treats_edges:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/2025_05_19_robokop_treats_all.csv
+
+rk_treats_edges_piped:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/2025_05_19_robokop_treats_all_with_pipes.csv
+
+new_coverage_robokop:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/2025_05_19_medi_not_in_rk.csv
+
+
+# ROBOKOP AND RTX COMPARISON
+robokop_indications:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/robokop_indications.csv
+  save_args:
+    sep: ","
+  
+rtx_indications:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/rtx_indications.txt
+  load_args:
+    sep: "\t"
+  save_args:
     sep: "\t"

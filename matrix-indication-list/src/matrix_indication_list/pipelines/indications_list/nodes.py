@@ -21,6 +21,9 @@ from functools import cache
 from openai import OpenAI
 import networkx as nx
 
+from matplotlib_venn import venn3
+import matplotlib.pyplot as plt
+
 from ontobio import OntologyFactory
 from ontobio.ontol_factory import OntologyFactory
 
@@ -182,6 +185,8 @@ def strip_spaces(myString):
     myString = _RE_STRIP_WHITESPACE.sub("", myString)
     return myString
 
+
+
 def mine_contraindications(dir: str) -> pd.DataFrame:
     contraindications_list = []
     ingredients_list = []
@@ -229,6 +234,8 @@ def mine_contraindications(dir: str) -> pd.DataFrame:
     print("finished ingesting indications")
     data = pd.DataFrame({'active ingredient':ingredients_list, 'contraindications':contraindications_list})
     return data
+
+
 
 #################################
 ### STANDARDIZATION #############
@@ -413,6 +420,7 @@ def resolve_concepts (inList: pd.DataFrame, column_to_resolve: str, out_column_i
                     labels.append(label[0])
                     success = True
                 except Exception as e:
+                    print(e)
                     attempts += 1
     if testing:
         inList = inList.head(limit) 
@@ -680,4 +688,65 @@ def assess_disease_list_coverage (disease_list: pd.DataFrame, indication_list: p
     return None
     
 
-        
+
+def plot_triple_venn(set1, set2, set3, title):
+    out = venn3([set(set1), set(set2), set(set3)], ("MeDI", "RTX", "ROBOKOP"))
+    for text in out.set_labels:
+        text.set_fontsize(32)
+    for text in out.subset_labels:
+        text.set_fontsize(24)
+    plt.title (title)
+    plt.rcParams.update({'font.size': 32})
+    plt.show()
+
+
+def compare_robokop_rtx_medi(robokop_indications:pd.DataFrame, rtx_indications:pd.DataFrame, medi_indications:pd.DataFrame)-> pd.DataFrame:
+    rtx_drugs = rtx_indications['drug']
+    rtx_diseases = rtx_indications['disease']
+    rtx_dd = set("|".join([row['drug'], row['disease']]) for idx, row  in rtx_indications.iterrows())
+
+    robokop_drugs = robokop_indications['drug']
+    robokop_diseases = robokop_indications['disease']
+    robokop_dd = set("|".join([row['drug'], row['disease']]) for idx, row  in robokop_indications.iterrows())
+
+    medi_drugs = medi_indications['final normalized drug id']
+    medi_diseases = medi_indications['final normalized disease id']
+    medi_dd = set("|".join([row['final normalized drug id'], row['final normalized disease id']]) for idx, row  in medi_indications.iterrows())
+
+    #print(set(list(medi_drugs)))
+
+    print("RTX")
+    print(len(set(rtx_drugs)))
+    print(len(set(rtx_diseases)))
+
+    print(len(set(rtx_dd)))
+
+    print("")
+
+    print("ROBOKOP")
+    print(len(set(robokop_drugs)))
+    print(len(set(robokop_diseases)))
+    print(len(set(robokop_dd)))
+
+    print("")
+
+    print("MEDI")
+    print(len(set(medi_drugs)))
+    print(len(set(medi_diseases)))
+    print(len(set(medi_dd)))
+
+
+
+    out = venn3([set(medi_drugs), set(rtx_drugs), set(robokop_drugs)], ("MeDI", "RTX", "ROBOKOP"))
+    for text in out.set_labels:
+        text.set_fontsize(32)
+    for text in out.subset_labels:
+        text.set_fontsize(24)
+    plt.title ("Drug Overlap")
+    plt.rcParams.update({'font.size': 32})
+    plt.show()
+
+    #plot_triple_venn(medi_diseases, rtx_diseases, robokop_diseases, "diseases")
+    plot_triple_venn(set(list(medi_dd)), set(list(rtx_dd)), set(list(robokop_dd)), "indications")
+
+    return robokop_indications    

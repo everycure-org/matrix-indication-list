@@ -33,9 +33,9 @@ column_names:
 biolink_type_disease: "DiseaseOrPhenotypicFeature"
 biolink_type_drug: "ChemicalOrDrugOrTreatment"
 
-path_to_fda_labels: /Volumes/MML/dailymed_labels/
+path_to_fda_labels: /Volumes/MML/2025_06_30_dailymed/
 
-structured_list_prompt: "Produce a list of diseases treated in the following therapeutic indications text. Please format the list as: 'item1|item2|...|itemN'. Do not include any other text in the response. If no diseases are treated, return 'None'. If the drug is only used for imaging, diagnostic, allergy testing, or procedural purposes (e.g., Technetium), return 'non-therapeutic'. Do not infer any diseases - only list diseases directly included in the passage. If no text is provided, respond 'None'. START TEXT HERE:"
+structured_list_prompt: "Produce a list of diseases treated in the following therapeutic indications text. Please format the list as: 'item1|item2|...|itemN'. Do not include any other text in the response. If no diseases are treated, return 'None'. If the drug is only used for imaging, diagnostic, allergy testing, or procedural purposes (e.g., Technetium), return 'non-therapeutic'. Do not infer any diseases - only list diseases directly included in the passage. Be as specific as possible when naming diseases. If no text is provided, respond 'None'. START TEXT HERE:"
 contraindications_structured_list_prompt: "Produce a list of contraindicated diseases in the following contraindications text. Please format the list as: 'item1|item2|...|itemN'. Do not include any other text in the response. If no contraindications, return 'None'. Do not include drug hypersensitivity. Do not infer any diseases - only list diseases directly included in the passage. If no text is provided, respond 'None'. Do not include therapeutic indications if the input text contains indications. Do not include interaction contraindications, i.e., when a drug is used concurrently with another drug. Exclude conditions related to allergy, e.g. anaphylaxis, angioedema, urticaria.  START TEXT HERE:"
 
 is_allergen_prompt: "Is the following active ingredient commonly used as an allergen for allergy testing? Respond only TRUE or FALSE. Provide no explanation. ACTIVE INGREDIENT: "
